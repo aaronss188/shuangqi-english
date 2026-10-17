@@ -1,5 +1,5 @@
 const CACHE = 'shuangqi-english-v1';
-const ASSETS = ['./','./index.html','./styles.css','./app.js','./manifest.json','./assets/icon.svg'];
+const ASSETS = ['./','./index.html','./styles.css','./app.js','./manifest.json','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
