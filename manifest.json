@@ -1,0 +1,18 @@
+{
+  "name": "双栖英语",
+  "short_name": "双栖英语",
+  "description": "两个人一起用的轻量英语打卡站",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7fbf2",
+  "theme_color": "#f7fbf2",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

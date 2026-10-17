@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7fbf2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="双栖英语" />
+  <title>双栖英语 · 两个人一起打卡</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-btn" id="profileBtn" aria-label="切换学习者">
+        <span class="avatar" id="topAvatar">岄</span>
+      </button>
+      <div class="brand-block">
+        <div class="brand-title">双栖英语</div>
+        <div class="brand-sub" id="brandSub">今天只学 5 分钟</div>
+      </div>
+      <div class="status-cluster">
+        <div class="status-pill" title="连续学习天数">🔥 <b id="streakCount">0</b></div>
+        <div class="status-pill" title="今日经验">⚡ <b id="xpCount">0</b></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-card">
+        <div>
+          <div class="eyebrow">今日目标</div>
+          <h1 id="heroTitle">完成 1 节，就算通关</h1>
+          <p id="heroCopy">不拼意志力，只拼把门槛降到地板。</p>
+        </div>
+        <div class="goal-ring" aria-label="今日进度">
+          <svg viewBox="0 0 42 42" class="ring-svg">
+            <circle class="ring-bg" cx="21" cy="21" r="15.9155"></circle>
+            <circle class="ring-fg" id="goalRing" cx="21" cy="21" r="15.9155"></circle>
+          </svg>
+          <span id="goalText">0/1</span>
+        </div>
+      </section>
+
+      <section class="couple-card">
+        <div class="couple-head">
+          <div>
+            <div class="eyebrow">双人小队</div>
+            <h2>今天谁先点亮火苗？</h2>
+          </div>
+          <button class="ghost-btn" id="coupleBtn">查看</button>
+        </div>
+        <div class="couple-grid" id="coupleGrid"></div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">学习路径</div>
+            <h2>从能开口开始</h2>
+          </div>
+          <div class="hearts">💚 <span id="heartCount">5</span></div>
+        </div>
+        <div class="path" id="lessonPath"></div>
+      </section>
+
+      <section class="section-block toolkit">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">轻量工具</div>
+            <h2>不想上课时，也能学一点</h2>
+          </div>
+        </div>
+        <div class="tool-grid">
+          <button class="tool-card" id="phraseBtn">
+            <span class="tool-icon">💬</span>
+            <span><b>每日一句</b><small>跟读 3 遍就算完成</small></span>
+          </button>
+          <button class="tool-card" id="reviewBtn">
+            <span class="tool-icon">🧠</span>
+            <span><b>错题回炉</b><small id="reviewCount">暂无错题</small></span>
+          </button>
+          <button class="tool-card" id="syncBtn">
+            <span class="tool-icon">🔗</span>
+            <span><b>双人同步</b><small>同设备可直接用</small></span>
+          </button>
+          <button class="tool-card" id="settingsBtn">
+            <span class="tool-icon">⚙️</span>
+            <span><b>设置</b><small>姓名、每日目标、提醒</small></span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button class="nav-item active" data-tab="learn"><span>⌂</span><b>学习</b></button>
+      <button class="nav-item" data-tab="couple"><span>♡</span><b>双人</b></button>
+      <button class="nav-item" data-tab="stats"><span>◫</span><b>进度</b></button>
+      <button class="nav-item" data-tab="me"><span>☺</span><b>我的</b></button>
+    </nav>
+  </div>
+
+  <div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
+  <section class="bottom-sheet hidden" id="sheet" aria-modal="true" role="dialog">
+    <div class="sheet-handle"></div>
+    <div id="sheetContent"></div>
+  </section>
+
+  <section class="lesson-screen hidden" id="lessonScreen" aria-live="polite">
+    <header class="lesson-header">
+      <button class="icon-btn plain" id="closeLesson" aria-label="退出课程">✕</button>
+      <div class="progress-track"><div id="lessonProgress" class="progress-fill"></div></div>
+      <div class="hearts">💚 <span id="lessonHearts">5</span></div>
+    </header>
+    <div class="lesson-body" id="lessonBody"></div>
+    <div class="lesson-footer" id="lessonFooter"></div>
+  </section>
+
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
