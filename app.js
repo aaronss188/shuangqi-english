@@ -207,6 +207,25 @@ function buildLesson(id,title,label,rule,targets,listen,finalTask){
   ].map((q,index)=>index===3?{...q,listen:listen[0]}:q)};
 }
 
+function buildSceneLesson(id,title,label,dialogue,words,choice1,speak1,choice2,speak2){
+  const vocabulary=words.map(([word,pronunciation,meaning,usage])=>{
+    const exampleLine=dialogue.find(line=>line[1].toLowerCase().includes(word.toLowerCase()));
+    return {type:'vocab',word,pronunciation,meaning,usage,example:exampleLine?.[1]||word,exampleZh:exampleLine?.[2]||''};
+  });
+  const roleplay=dialogue.filter((line,index)=>index%2===0&&dialogue[index+1]?.[0]==='You').map((line,index)=>({
+    type:'roleplay',prompt:`第 ${index+1} 轮：先听对方说，再用自己的话回答。`,cue:line[1],cueZh:line[2],response:dialogue[index*2+1][1],responseZh:dialogue[index*2+1][2]
+  }));
+  return {id,title,label,estimatedMinutes:30,questions:[
+    {type:'dialogue',prompt:'先听完整对话，再逐句跟读。重点看下面的词汇注释。',dialogue,words},
+    ...vocabulary,
+    {...choice1,type:'choice'},
+    {type:'speak',prompt:speak1[0],phrase:speak1[1],zh:speak1[2],words:speak1[3]||[]},
+    {...choice2,type:'choice'},
+    {type:'speak',prompt:speak2[0],phrase:speak2[1],zh:speak2[2],words:speak2[3]||[]},
+    ...roleplay
+  ]};
+}
+
 const newStageStart=lessonCatalog.length;
 lessonCatalog.push(
   {
@@ -442,6 +461,95 @@ lessonCatalog.push(
     ]
   }
 );
+lessonCatalog.push(
+  {
+    unit:'阶段 14 · 日常对话：家与邻里',subtitle:'从打招呼、聊日常到自然求助',icon:'🏡',lessons:[
+      buildSceneLesson('u16l1','认识新邻居','打招呼与自我介绍',[
+        ['Mia','Hi, I’m Mia from next door.','嗨，我是隔壁的 Mia。'],['You','Hi, I’m Alex. Nice to meet you.','嗨，我是 Alex。很高兴认识你。'],['Mia','Welcome to the neighborhood!','欢迎搬来这个社区！'],['You','Thanks! We just moved in last week.','谢谢！我们上周刚搬来。'],['Mia','Let me know if you need anything.','如果你需要什么，告诉我一声。'],['You','That’s really nice of you.','你真是太好了。']
+      ],[['next door','/ˌnekst ˈdɔːr/','隔壁','常说 live next door，住在隔壁。'],['neighborhood','/ˈneɪbərˌhʊd/','社区；街坊','美式拼法；英式常写 neighbourhood。'],['move in','/muːv ɪn/','搬进来','move in last week 表示上周搬进来。'],['let me know','/let mi noʊ/','告诉我；让我知道','礼貌邀请对方之后再联系。']],
+        {prompt:'Mia 住在哪里？',options:['next door','downtown','at the station','in a hotel'],answer:0,explain:'next door 指“隔壁”。'},['向新邻居介绍自己','Hi, I’m Alex. Nice to meet you.','嗨，我是 Alex。很高兴认识你。'],
+        {prompt:'“我们上周刚搬来”是哪句？',options:['We just moved in last week.','We move next week.','We live here for a year.','We are moving tomorrow.'],answer:0,explain:'moved in 是 move in 的过去式，表示已经搬进来。'},['回应对方主动提供帮助','That’s really nice of you.','你真是太好了。']),
+      buildSceneLesson('u16l2','早上出门前','日常作息与简单提醒',[
+        ['Sam','Are you ready to go?','你准备好出门了吗？'],['You','Almost. I’m looking for my keys.','快好了。我在找钥匙。'],['Sam','They’re on the kitchen counter.','它们在厨房台面上。'],['You','Got them. Did you pack lunch?','找到了。你带午饭了吗？'],['Sam','Yes, it’s in my bag. Let’s head out.','带了，在我包里。我们出发吧。'],['You','Okay. I’ll lock the door.','好，我来锁门。']
+      ],[['almost','/ˈɔːlmoʊst/','差不多；几乎','Almost. 常用来回答“准备好了吗”。'],['look for','/lʊk fɔːr/','寻找','look for my keys；look 是寻找动作。'],['counter','/ˈkaʊntər/','台面；柜台','kitchen counter 是厨房操作台。'],['head out','/hed aʊt/','出门；动身','口语短语，表示离开当前地点。']],
+        {prompt:'钥匙在哪里？',options:['On the kitchen counter.','In the car.','In Sam’s bag.','By the front door.'],answer:0,explain:'counter 是厨房台面。'},['说你正在找某物','I’m looking for my keys.','我正在找我的钥匙。'],
+        {prompt:'“我们出发吧”怎么说？',options:['Let’s head out.','Let’s look for it.','Let’s pack lunch.','Let’s lock it.'],answer:0,explain:'head out 表示出门、动身。'},['说自己来锁门','I’ll lock the door.','我来锁门。']),
+      buildSceneLesson('u16l3','聊聊天气和周末','闲聊与安排',[
+        ['Mia','It’s beautiful out today, isn’t it?','今天天气真好，是吧？'],['You','Yeah, it’s sunny but a little windy.','是啊，晴天，不过有点风。'],['Mia','Do you have any plans this weekend?','你这周末有什么安排吗？'],['You','We’re thinking about going to the beach.','我们在考虑去海边。'],['Mia','That sounds fun. Which beach?','听起来不错。去哪片海滩？'],['You','We haven’t decided yet. Any suggestions?','还没决定。你有什么建议吗？']
+      ],[['out','/aʊt/','外面；户外','It’s beautiful out 是很自然的天气闲聊。'],['windy','/ˈwɪndi/','有风的','windy 描述天气；wind 的 d 不单独发音。'],['be thinking about','/bi ˈθɪŋkɪŋ əˈbaʊt/','正在考虑','后面接名词或动词 -ing。'],['suggestion','/səˈdʒestʃən/','建议','Any suggestions? 是征求建议的常用问法。']],
+        {prompt:'他们还决定去哪片海滩了吗？',options:['还没有。','已经决定了。','他们不去海滩。','Mia 不知道周末安排。'],answer:0,explain:'We haven’t decided yet. 表示还没有决定。'},['问别人周末有什么安排','Do you have any plans this weekend?','你这周末有什么安排吗？'],
+        {prompt:'“你有什么建议吗？”怎么说？',options:['Any suggestions?','Any reservations?','Any directions?','Any questions for me?'],answer:0,explain:'suggestion 是建议；Any suggestions? 简洁自然。'},['表达自己还没决定','We haven’t decided yet.','我们还没决定。']),
+      buildSceneLesson('u16l4','请邻居帮个忙','提出请求与致谢',[
+        ['You','Hi, Mia. Could I ask you a quick favor?','嗨，Mia。我能请你帮个小忙吗？'],['Mia','Sure. What do you need?','当然。你需要什么？'],['You','Could you water our plants while we’re away?','我们不在时，你能帮忙给植物浇水吗？'],['Mia','No problem. How often should I water them?','没问题。我应该多久浇一次？'],['You','Just once a day is fine. Thank you so much.','一天一次就可以。太谢谢你了。'],['Mia','Of course. Have a great trip!','不客气。旅途愉快！']
+      ],[['favor','/ˈfeɪvər/','帮忙；恩惠','ask someone a favor 是请某人帮忙。'],['while','/waɪl/','在……期间','while we’re away 表示我们不在期间。'],['water','/ˈwɔːtər/','浇水','water 作动词时是给植物浇水。'],['once a day','/wʌns ə deɪ/','每天一次','once 表示一次；twice 表示两次。']],
+        {prompt:'邻居要帮忙做什么？',options:['给植物浇水','照看宠物','收快递','打扫厨房'],answer:0,explain:'water our plants 是给植物浇水。'},['礼貌地请人帮忙','Could I ask you a quick favor?','我能请你帮个小忙吗？'],
+        {prompt:'“我们不在期间”是哪一段？',options:['while we’re away','once a day','no problem','have a great trip'],answer:0,explain:'while we’re away 表示我们不在的这段时间。'},['感谢对方帮忙','Thank you so much.','太谢谢你了。']),
+      buildSceneLesson('u16l5','约朋友来家里','邀请与确认时间',[
+        ['You','Would you like to come over for dinner?','你愿意来家里吃晚饭吗？'],['Mia','I’d love to. What day works for you?','我很愿意。你哪天方便？'],['You','How about Saturday around six?','周六六点左右怎么样？'],['Mia','Saturday works. Should I bring anything?','周六可以。需要我带点什么吗？'],['You','Could you bring a dessert?','你能带个甜点来吗？'],['Mia','Absolutely. See you then!','当然可以。到时见！']
+      ],[['come over','/kʌm ˈoʊvər/','到家里来；串门','邀请到自己家常说 come over。'],['I’d love to','/aɪd lʌv tuː/','我很愿意','接受邀请的友好表达。'],['work for you','/wɜːrk fɔːr juː/','对你方便','What day works for you? 问哪天合适。'],['dessert','/dɪˈzɜːrt/','甜点','重音在第二音节；和 desert“沙漠”不同。']],
+        {prompt:'他们约在什么时候？',options:['周六六点左右','周五中午','周日早上','周六八点'],answer:0,explain:'Saturday around six 是周六六点左右。'},['邀请朋友来家里吃饭','Would you like to come over for dinner?','你愿意来家里吃晚饭吗？'],
+        {prompt:'Mia 会带什么？',options:['甜点','饮料','主菜','鲜花'],answer:0,explain:'Could you bring a dessert? 对方答应带甜点。'},['接受邀请并说自己很愿意','I’d love to.','我很愿意。'])
+    ]
+  },
+  {
+    unit:'阶段 15 · 日常对话：吃饭与购物',subtitle:'点单、买菜、付款和解决小问题',icon:'🛍️',lessons:[
+      buildSceneLesson('u17l1','在咖啡店点单','美式咖啡店表达',[
+        ['Barista','Hi! What can I get for you?','你好！想喝点什么？'],['You','Could I get a medium latte, please?','请给我一杯中杯拿铁，可以吗？'],['Barista','Sure. Would you like it hot or iced?','好的。要热的还是冰的？'],['You','Iced, please. And could I get oat milk?','请做冰的。可以换燕麦奶吗？'],['Barista','Absolutely. Anything else?','当然可以。还需要别的吗？'],['You','That’s all. For here, please.','就这些，请在店里喝。']
+      ],[['barista','/bəˈrɪstə/','咖啡师；咖啡店店员','咖啡店点单时对方常这样称呼。'],['medium','/ˈmiːdiəm/','中杯；中等的','店内杯型通常有 small / medium / large。'],['iced','/aɪst/','加冰的；冰的','iced coffee 是冰咖啡。'],['oat milk','/ˈoʊt mɪlk/','燕麦奶','点单可说 Could I get oat milk?']],
+        {prompt:'顾客点了什么？',options:['一杯中杯冰拿铁','一杯热美式','一杯大杯冰茶','一杯小杯热巧克力'],answer:0,explain:'medium latte + iced 表示中杯冰拿铁。'},['询问能否换燕麦奶','Could I get oat milk?','可以给我换燕麦奶吗？'],
+        {prompt:'顾客打算在哪里喝？',options:['在店里','带走','车里','还没决定'],answer:0,explain:'For here 表示在店内；to go 表示带走。'},['说明要在店里喝','For here, please.','请在店里喝。']),
+      buildSceneLesson('u17l2','在简餐店吃饭','入座与点餐',[
+        ['Host','Hi! How many are in your party?','你好！请问几位？'],['You','A table for two, please.','请给我们两个人的桌子。'],['Host','Right this way. Here are your menus.','这边请。这是你们的菜单。'],['Server','Can I start you off with something to drink?','先给你们来点喝的吗？'],['You','Just water for now, thanks.','现在先要水就好，谢谢。'],['Server','Are you ready to order?','你们准备好点餐了吗？']
+      ],[['party','/ˈpɑːrti/','同行的一组人','餐馆里 How many in your party? 是问几位用餐。'],['table for two','/ˈteɪbəl fər tuː/','两人桌','在美国餐馆常用来报人数。'],['right this way','/raɪt ðɪs weɪ/','这边请','服务人员带位时的固定表达。'],['for now','/fər naʊ/','暂时；目前','Just water for now 表示暂时先要水。']],
+        {prompt:'他们几个人用餐？',options:['两位','一位','三位','四位'],answer:0,explain:'A table for two 是两个人的桌位。'},['告诉服务员要两人桌','A table for two, please.','请给我们两个人的桌子。'],
+        {prompt:'Just water for now 是什么意思？',options:['现在先要水','不要水','要两杯咖啡','饭后再点水'],answer:0,explain:'for now 表示目前、暂时。'},['暂时只要水','Just water for now, thanks.','现在先要水就好，谢谢。']),
+      buildSceneLesson('u17l3','在超市找东西','询问商品位置',[
+        ['You','Excuse me, where can I find the eggs?','打扰一下，请问鸡蛋在哪里？'],['Worker','They’re in aisle five, near the milk.','在五号货架通道，牛奶附近。'],['You','Thanks. Is this milk on sale?','谢谢。这种牛奶在打折吗？'],['Worker','Yes, it’s two for five dollars.','是的，两件五美元。'],['You','Great. I’ll take two.','太好了。我买两件。'],['Worker','You can check out at the front.','你可以在前面结账。']
+      ],[['find','/faɪnd/','找到；在哪里能买到','Where can I find...? 用来问商品位置。'],['aisle','/aɪl/','货架通道','s 不发音；aisle five 是五号通道。'],['on sale','/ɑːn seɪl/','打折的','注意不是 for sale（待售）。'],['check out','/tʃek aʊt/','结账','check out at the front 表示在前面结账。']],
+        {prompt:'鸡蛋在哪里？',options:['五号通道，牛奶附近','收银台后面','三号通道，面包附近','店门口'],answer:0,explain:'aisle five, near the milk 是五号通道、牛奶附近。'},['询问商品在哪里','Where can I find the eggs?','请问鸡蛋在哪里？'],
+        {prompt:'two for five dollars 表示什么？',options:['两件五美元','一件两美元','五件两美元','两美元折扣'],answer:0,explain:'two for five dollars 是两件合计五美元。'},['确认自己要买两件','I’ll take two.','我买两件。']),
+      buildSceneLesson('u17l4','买衣服试尺码','试穿与询问尺寸',[
+        ['You','I like this jacket. Do you have it in a medium?','我喜欢这件夹克。有中码吗？'],['Clerk','Let me check for you.','我帮你查一下。'],['Clerk','Here you go. The fitting room is over there.','给你。试衣间在那边。'],['You','Thanks. Can I try it on?','谢谢。我可以试穿吗？'],['Clerk','Of course. How does it fit?','当然。尺寸合适吗？'],['You','It fits well, but the sleeves are a little long.','很合身，不过袖子有点长。']
+      ],[['jacket','/ˈdʒækɪt/','夹克；外套','常见衣物词。'],['medium','/ˈmiːdiəm/','中码','衣服尺码常用 small、medium、large。'],['fitting room','/ˈfɪtɪŋ ruːm/','试衣间','也可说 changing room；美式商店常见 fitting room。'],['fit','/fɪt/','合身；适合','How does it fit? 问衣服穿着合不合适。']],
+        {prompt:'顾客想找什么尺码？',options:['中码','小码','大码','加大码'],answer:0,explain:'in a medium 是中码。'},['询问能不能试穿','Can I try it on?','我可以试穿吗？'],
+        {prompt:'衣服哪里有点长？',options:['袖子','裤腿','衣领','衣摆'],answer:0,explain:'sleeves 是袖子。'},['描述袖子有点长','The sleeves are a little long.','袖子有点长。']),
+      buildSceneLesson('u17l5','结账和索要收据','付款与礼貌结束',[
+        ['Cashier','Did you find everything okay?','东西都找齐了吗？'],['You','Yes, thanks. Can I pay with my phone?','找齐了，谢谢。我可以用手机付款吗？'],['Cashier','Sure. You can tap right here.','可以，在这里轻触一下就行。'],['You','All set. Could I get a receipt, please?','好了。可以给我一张收据吗？'],['Cashier','Of course. Would you like a bag?','当然。需要袋子吗？'],['You','No bag, thanks. I brought my own.','不用袋子，谢谢。我自己带了。']
+      ],[['cashier','/kæˈʃɪr/','收银员','在收银台付款时的工作人员。'],['tap','/tæp/','轻触；碰一下','手机或银行卡感应付款常说 tap。'],['receipt','/rɪˈsiːt/','收据','p 不发音；常说 get a receipt。'],['my own','/maɪ oʊn/','我自己的','I brought my own 表示我自己带了。']],
+        {prompt:'顾客用什么付款？',options:['手机','现金','支票','礼品卡'],answer:0,explain:'pay with my phone 是用手机付款。'},['询问能否用手机付款','Can I pay with my phone?','我可以用手机付款吗？'],
+        {prompt:'顾客最后要不要袋子？',options:['不要，自己带了','要两个','要纸袋','还没决定'],answer:0,explain:'No bag, I brought my own 表示不需要袋子，我自己带了。'},['索要一张收据','Could I get a receipt, please?','可以给我一张收据吗？'])
+    ]
+  },
+  {
+    unit:'阶段 16 · 日常对话：出行与办事',subtitle:'问路、预约、买药和处理听不懂的情况',icon:'🚌',lessons:[
+      buildSceneLesson('u18l1','问公交车怎么坐','路线与下车提醒',[
+        ['You','Excuse me, does this bus go downtown?','打扰一下，这辆公交去市中心吗？'],['Driver','Yes. You need to get off at Main Street.','去的。你需要在 Main Street 下车。'],['You','How many stops is that?','还要坐几站？'],['Driver','About six stops. I’ll let you know.','大约六站。到了我告诉你。'],['You','Thanks. How much is the fare?','谢谢。车费多少钱？'],['Driver','It’s three dollars. You can tap your card.','三美元。可以刷卡感应。']
+      ],[['downtown','/ˈdaʊnˌtaʊn/','市中心','美式常用；澳洲也常听到 city centre。'],['get off','/ɡet ɔːf/','下车','公交、火车都可用；上车是 get on。'],['stop','/stɑːp/','车站；停靠站','six stops 是六站。'],['fare','/fer/','车费','the bus fare 是公交车费。']],
+        {prompt:'乘客应该在哪里下车？',options:['Main Street','Market Street','机场','火车总站'],answer:0,explain:'get off at Main Street 是在 Main Street 下车。'},['询问公交是否去市中心','Does this bus go downtown?','这辆公交去市中心吗？'],
+        {prompt:'还要坐几站？',options:['大约六站','三站','十站','一站'],answer:0,explain:'About six stops 表示大约六站。'},['询问车费','How much is the fare?','车费多少钱？']),
+      buildSceneLesson('u18l2','打车告诉司机目的地','地址与上下车',[
+        ['Driver','Where would you like to go?','您想去哪里？'],['You','Could you take me to the airport, please?','请送我去机场，可以吗？'],['Driver','Sure. Do you have a preferred route?','可以。您有偏好的路线吗？'],['You','The fastest route is fine.','走最快的路线就好。'],['Driver','There’s some traffic on the highway.','高速公路上有些堵车。'],['You','That’s okay. Please drop me off at Terminal Two.','没关系。请在二号航站楼让我下车。']
+      ],[['take me to','/teɪk mi tuː/','送我去','打车告诉司机目的地的常用句型。'],['preferred','/prɪˈfɜːrd/','偏好的；更喜欢的','preferred route 是偏好的路线。'],['traffic','/ˈtræfɪk/','交通；车流','有堵车常说 heavy traffic。'],['drop me off','/drɑːp mi ɔːf/','让我下车；送我到','drop someone off 是把某人送到某处。']],
+        {prompt:'乘客要去哪里？',options:['机场','市中心','火车站','酒店'],answer:0,explain:'take me to the airport 表示送我去机场。'},['告诉司机送自己去机场','Could you take me to the airport, please?','请送我去机场，可以吗？'],
+        {prompt:'乘客要在哪里下车？',options:['二号航站楼','一号航站楼','高速路入口','停车场'],answer:0,explain:'Terminal Two 是二号航站楼。'},['说明希望司机在哪儿放自己下车','Please drop me off at Terminal Two.','请在二号航站楼让我下车。']),
+      buildSceneLesson('u18l3','在诊所预约看诊','预约时间与症状',[
+        ['Receptionist','Good morning. How can I help you?','早上好。有什么可以帮您？'],['You','I’d like to make an appointment with a doctor.','我想预约看医生。'],['Receptionist','Is this your first visit?','这是您第一次来吗？'],['You','Yes. I have a sore throat and a cough.','是的。我喉咙痛，还咳嗽。'],['Receptionist','We have an opening tomorrow at nine.','我们明天九点有一个空档。'],['You','That works for me. Do I need to bring anything?','这个时间我可以。需要带什么吗？']
+      ],[['receptionist','/rɪˈsepʃənɪst/','接待员；前台','诊所或办公室前台工作人员。'],['make an appointment','/meɪk ən əˈpɔɪntmənt/','预约','make an appointment with a doctor。'],['sore throat','/sɔːr θroʊt/','喉咙痛','描述常见症状；sore 表示疼痛的。'],['opening','/ˈoʊpənɪŋ/','空档；可预约的时间','We have an opening 表示有时间可以安排。']],
+        {prompt:'预约安排在什么时候？',options:['明天九点','今天下午三点','下周一上午','明天中午'],answer:0,explain:'tomorrow at nine 是明天九点。'},['提出预约看医生','I’d like to make an appointment with a doctor.','我想预约看医生。'],
+        {prompt:'病人有哪些症状？',options:['喉咙痛和咳嗽','头痛和发烧','胃痛和恶心','背痛和咳嗽'],answer:0,explain:'sore throat 是喉咙痛；a cough 是咳嗽。'},['说明自己喉咙痛并咳嗽','I have a sore throat and a cough.','我喉咙痛，还咳嗽。']),
+      buildSceneLesson('u18l4','在药房买非处方药','描述轻微症状并听说明',[
+        ['You','Hi, do you have anything for a headache?','你好，有没有治头痛的药？'],['Pharmacist','How long have you had it?','你头痛多久了？'],['You','Since this morning. It’s not too bad.','从今天早上开始，不是特别严重。'],['Pharmacist','This one may help. Follow the directions on the label.','这款可能有帮助。请按标签说明服用。'],['You','Can I take it with food?','我可以和食物一起服用吗？'],['Pharmacist','Yes, but ask a doctor if it gets worse.','可以，但如果症状加重，请咨询医生。']
+      ],[['anything for','/ˈeniθɪŋ fɔːr/','有没有什么能治/应对','在药店询问某类用品的实用说法。'],['pharmacist','/ˈfɑːrməsɪst/','药剂师','可以向药剂师询问药品使用信息。'],['directions','/dəˈrekʃənz/','使用说明；指示','directions on the label 是标签上的说明。'],['get worse','/ɡet wɜːrs/','变得更严重','症状加重常说 it gets worse。']],
+        {prompt:'顾客头痛多久了？',options:['从今天早上','从昨天','一周','刚刚开始'],answer:0,explain:'Since this morning 表示从今天早上开始。'},['询问有没有治头痛的东西','Do you have anything for a headache?','有没有治头痛的药？'],
+        {prompt:'药剂师建议顾客怎么做？',options:['按标签说明服用，恶化时问医生','马上加倍服用','和其他药混着吃','停止喝水'],answer:0,explain:'Follow the directions on the label，并在变严重时咨询医生。'},['询问是否能和食物一起服用','Can I take it with food?','我可以和食物一起服用吗？']),
+      buildSceneLesson('u18l5','没听懂时请对方重复','沟通修复与确认信息',[
+        ['Staff','Your appointment is at three fifteen on Thursday.','您的预约是周四三点十五分。'],['You','Sorry, could you say that again?','不好意思，您能再说一遍吗？'],['Staff','Thursday at three fifteen.','周四三点十五分。'],['You','Did you say three fifty or three fifteen?','您说的是三点五十还是三点十五？'],['Staff','Three fifteen. I can text you the details.','三点十五。我可以把详情发短信给您。'],['You','That would be great. Thank you.','那太好了。谢谢。']
+      ],[['say that again','/seɪ ðæt əˈɡen/','再说一遍','礼貌请求重复；也可说 Could you repeat that?'],['fifteen','/ˌfɪfˈtiːn/','十五','重音在 teen；与 fifty（五十）区分。'],['details','/ˈdiːteɪlz/','详情；细节','text you the details 是把详情发短信给你。'],['That would be great','/ðæt wʊd bi ɡreɪt/','那太好了','自然接受对方提出的帮助。']],
+        {prompt:'预约时间是几点？',options:['周四三点十五','周四三点五十','周五三点十五','周四四点十五'],answer:0,explain:'three fifteen 是 3:15；fifty 是 50。'},['礼貌地请对方再说一遍','Could you say that again?','您能再说一遍吗？'],
+        {prompt:'工作人员提出怎样帮助？',options:['发短信告知详情','改到周五','派车接送','寄纸质信件'],answer:0,explain:'I can text you the details 是可以把详情发短信给你。'},['确认自己听到的两个时间','Did you say three fifty or three fifteen?','您说的是三点五十还是三点十五？'])
+    ]
+  }
+);
 for(const [stageIndex,unit] of lessonCatalog.slice(newStageStart).entries()){
   const bank=unit.lessons.flatMap(lesson=>lesson.questions.filter(question=>question.type==='choice'));
   const questions=Array.from({length:5},(_,index)=>JSON.parse(JSON.stringify(bank[Math.floor(index*bank.length/5)])));
@@ -451,10 +559,11 @@ for(const [stageIndex,unit] of lessonCatalog.slice(newStageStart).entries()){
 const defaultState = {
   activeUser: 'me',
   users: {
-    me: { name: '岄', avatar: '岄', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0 },
-    partner: { name: '娜娜', avatar: '娜', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0 }
+    me: { name: '岄', avatar: '岄', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0, dailyStudyMinutes: 0 },
+    partner: { name: '娜娜', avatar: '娜', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0, dailyStudyMinutes: 0 }
   },
   dailyGoal: 1,
+  dailyGoalMinutes: 30,
   lastGlobalDate: null
 };
 
@@ -495,7 +604,7 @@ function otherUser(){ return state.users[state.activeUser === 'me' ? 'partner' :
 function resetDailyIfNeeded(){
   const today = todayKey();
   if(state.lastGlobalDate !== today){
-    Object.values(state.users).forEach(u => u.dailyDone = 0);
+    Object.values(state.users).forEach(u => { u.dailyDone = 0; u.dailyStudyMinutes = 0; });
     state.lastGlobalDate = today;
     save();
   }
@@ -505,17 +614,17 @@ function render(){
   resetDailyIfNeeded();
   const u = user();
   $('topAvatar').textContent = u.avatar || u.name.slice(0,1);
-  $('brandSub').textContent = `${u.name} · 今天只学 ${Math.max(5, state.dailyGoal * 5)} 分钟`;
+  $('brandSub').textContent = `${u.name} · 今日目标 ${state.dailyGoalMinutes} 分钟`;
   $('streakCount').textContent = u.streak;
   $('xpCount').textContent = u.xp;
   $('heartCount').textContent = u.hearts;
   $('reviewCount').textContent = u.mistakes.length ? `${u.mistakes.length} 道待复习` : '暂无错题';
-  const done = Math.min(u.dailyDone, state.dailyGoal);
-  const pct = state.dailyGoal ? Math.round(done / state.dailyGoal * 100) : 100;
+  const done = Math.min(u.dailyStudyMinutes, state.dailyGoalMinutes);
+  const pct = state.dailyGoalMinutes ? Math.round(done / state.dailyGoalMinutes * 100) : 100;
   $('goalRing').style.strokeDasharray = `${pct} ${100-pct}`;
-  $('goalText').textContent = `${done}/${state.dailyGoal}`;
-  $('heroTitle').textContent = done >= state.dailyGoal ? '今天已经通关 ✓' : '完成 1 节，就算通关';
-  $('heroCopy').textContent = done >= state.dailyGoal ? '现在继续学是赚到，不继续也不欠作业。' : '不拼意志力，只拼把门槛降到地板。';
+  $('goalText').textContent = `${done}/${state.dailyGoalMinutes}分`;
+  $('heroTitle').textContent = done >= state.dailyGoalMinutes ? '今天的学习目标完成了 ✓' : `今天学够 ${state.dailyGoalMinutes} 分钟`;
+  $('heroCopy').textContent = done >= state.dailyGoalMinutes ? '今天的计划完成了。想继续就继续，不用给自己加压。' : `完成一节约 5 分钟基础课，或一节约 30 分钟情景课。`;
   renderCouple();
   renderPath();
 }
@@ -523,7 +632,7 @@ function render(){
 function renderCouple(){
   const entries = Object.entries(state.users);
   $('coupleGrid').innerHTML = entries.map(([key,u]) => {
-    const pct = Math.min(100, Math.round((u.dailyDone / Math.max(1,state.dailyGoal))*100));
+    const pct = Math.min(100, Math.round((u.dailyStudyMinutes / Math.max(1,state.dailyGoalMinutes))*100));
     return `<div class="person-card">
       <div class="person-row">
         <div class="person-avatar">${escapeHtml(u.avatar || u.name.slice(0,1))}</div>
@@ -579,17 +688,38 @@ function openLesson(id){
 function renderQuestion(){
   const q = currentLesson.questions[questionIndex];
   const u = user();
+  const stepLabel=`学习环节 ${questionIndex+1} / ${currentLesson.questions.length}${currentLesson.estimatedMinutes?` · 约 ${currentLesson.estimatedMinutes} 分钟`:''}`;
   $('lessonHearts').textContent = u.hearts;
   $('lessonProgress').style.width = `${(questionIndex/currentLesson.questions.length)*100}%`;
   selectedAnswer = null;
   answered = false;
 
-  if(q.type === 'choice'){
-    $('lessonBody').innerHTML = `<div class="question-kicker">第 ${questionIndex+1} / ${currentLesson.questions.length} 题</div>
+  if(q.type === 'dialogue'){
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel} · 情景对话</div>
+      <div class="question-title">${escapeHtml(currentLesson.title)}</div>
+      <div class="question-hint">${escapeHtml(q.prompt)} · 美式发音</div>
+      ${renderSceneMaterial(currentLesson.id)}
+      <button class="listen-prompt" id="dialogueListen">🔊 播放完整对话</button>
+      <div class="dialogue-list">${q.dialogue.map((line,index)=>`<div class="dialogue-line"><div class="dialogue-line-top"><b>${escapeHtml(line[0])}</b><button class="dialogue-play" data-dialogue-line="${index}" aria-label="播放第${index+1}句">▶</button></div><div class="dialogue-en">${escapeHtml(line[1])}</div><div class="dialogue-zh">${escapeHtml(line[2])}</div></div>`).join('')}</div>
+      ${renderWordNotes(q.words)}`;
+    $('dialogueListen').addEventListener('click',()=>speakText(q.dialogue.map(line=>line[1]).join('. ')));
+    document.querySelectorAll('[data-dialogue-line]').forEach(btn=>btn.addEventListener('click',()=>speakText(q.dialogue[Number(btn.dataset.dialogueLine)][1])));
+  } else if(q.type === 'vocab'){
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel} · 核心词汇</div>
+      <div class="question-title">${escapeHtml(currentLesson.title)}</div>
+      <div class="vocab-focus"><div><b>${escapeHtml(q.word)}</b><span>${escapeHtml(q.pronunciation)}</span></div><strong>${escapeHtml(q.meaning)}</strong><p>${escapeHtml(q.usage)}</p></div>
+      <div class="vocab-example"><small>对话例句</small><div>${escapeHtml(q.example)}</div><p>${escapeHtml(q.exampleZh)}</p></div>
+      <div class="speak-actions"><button id="vocabWordListen">🔊 听单词</button><button id="vocabExampleListen">🔊 听例句</button></div>
+      <div class="question-hint">建议：跟读 3 遍，再想一个你自己的例句。</div>`;
+    $('vocabWordListen').addEventListener('click',()=>speakText(q.word));
+    $('vocabExampleListen').addEventListener('click',()=>speakText(q.example));
+  } else if(q.type === 'choice'){
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel}</div>
       ${q.passage ? `<div class="reading-passage">${escapeHtml(q.passage)}</div>` : ''}
       ${q.listen ? `<button class="listen-prompt" id="questionListen">🔊 先听英文，再选答案</button>` : ''}
       <div class="question-title">${escapeHtml(q.prompt)}</div>
       <div class="question-hint">不用追求一次全对，先让嘴和脑子熟起来。</div>
+      ${renderWordNotes(q.words)}
       <div class="answer-grid">${q.options.map((opt,i)=>`<button class="answer-btn" data-answer="${i}">${escapeHtml(opt)}</button>`).join('')}</div>`;
     if(q.listen) $('questionListen').addEventListener('click', ()=>speakText(q.listen));
     document.querySelectorAll('[data-answer]').forEach(btn => btn.addEventListener('click', () => {
@@ -600,11 +730,12 @@ function renderQuestion(){
       renderFooter();
     }));
   } else if(q.type === 'speak') {
-    $('lessonBody').innerHTML = `<div class="question-kicker">第 ${questionIndex+1} / ${currentLesson.questions.length} 题</div>
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel} · 跟读开口</div>
       <div class="question-title">${escapeHtml(q.prompt)}</div>
       <div class="speak-card">
         <div class="big-phrase">${escapeHtml(q.phrase)}</div>
         <div class="question-hint">${escapeHtml(q.zh)}</div>
+        ${renderWordNotes(q.words)}
         <div class="speak-actions">
           <button id="listenBtn">🔊 听一遍</button>
           <button id="speakBtn">🎙️ 我说了</button>
@@ -616,8 +747,16 @@ function renderQuestion(){
       showToast('算你开口了，过关 👏');
       renderFooter();
     });
+  } else if(q.type === 'roleplay'){
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel} · 轮到你回应</div>
+      <div class="question-title">${escapeHtml(q.prompt)}</div>
+      <div class="roleplay-card"><small>对方说</small><div class="dialogue-en">${escapeHtml(q.cue)}</div><div class="dialogue-zh">${escapeHtml(q.cueZh)}</div><button class="listen-prompt" id="roleplayCueListen">🔊 听对方</button></div>
+      <div class="roleplay-challenge">先别看答案，自己用英语说一句回应。可以换成你真实会用的信息。</div>
+      <details class="roleplay-answer"><summary>说完后查看参考回应</summary><div class="dialogue-en">${escapeHtml(q.response)}</div><div class="dialogue-zh">${escapeHtml(q.responseZh)}</div><button class="listen-prompt" id="roleplayAnswerListen">🔊 听参考回应</button></details>`;
+    $('roleplayCueListen').addEventListener('click',()=>speakText(q.cue));
+    $('roleplayAnswerListen').addEventListener('click',()=>speakText(q.response));
   } else {
-    $('lessonBody').innerHTML = `<div class="question-kicker">第 ${questionIndex+1} / ${currentLesson.questions.length} 题 · 写作练习</div>
+    $('lessonBody').innerHTML = `<div class="question-kicker">${stepLabel} · 写作练习</div>
       <div class="question-title">${escapeHtml(q.prompt)}</div>
       <div class="question-hint">先自己写，再对照参考答案。这个练习不会自动判语法对错。</div>
       <textarea class="writing-answer" id="writingAnswer" rows="5" maxlength="800" placeholder="用英文写几句……"></textarea>`;
@@ -626,9 +765,32 @@ function renderQuestion(){
   renderFooter();
 }
 
+const sceneMaterials={
+  u17l1:{title:'咖啡店菜单 · Counter Coffee',image:'assets/scenes/melbourne-cafe.jpg',alt:'墨尔本街区咖啡店里顾客向咖啡师点单',rows:[['Flat white','$4.80'],['Latte','$5.00'],['Iced latte','$5.50'],['Oat milk','+$0.80']],tip:'价格为澳元。For here = 店内喝；To go = 带走。'},
+  u17l2:{title:'简餐菜单 · All-day menu',image:'assets/scenes/melbourne-cafe.jpg',alt:'澳洲街区咖啡店的柜台与顾客',rows:[['Eggs on toast','$14'],['Chicken sandwich','$16'],['Soup of the day','$12'],['Tap water','Free']],tip:'价格为澳元。问有没有空桌：Do you have a table for two?'},
+  u17l3:{title:'购物清单 · Shopping list',image:'assets/scenes/australian-supermarket.jpg',alt:'顾客在澳洲超市向店员询问商品位置',rows:[['☐ Eggs','Aisle 5'],['☐ Milk','Aisle 5 · Dairy'],['☐ Bread','Aisle 2 · Bakery'],['Special','2 for $5.00']],tip:'价格为澳元。Aisle 是货架通道；on sale 表示打折。'},
+  u17l4:{title:'衣物尺码牌 · Size guide',rows:[['S','Small'],['M','Medium'],['L','Large'],['Fitting room','Back left']],tip:'试衣服说 try it on；合身可以说 It fits well.'},
+  u17l5:{title:'超市小票 · Receipt',image:'assets/scenes/australian-supermarket.jpg',alt:'澳洲超市购物和结账场景',rows:[['Groceries','$18.40'],['Reusable bag','$0.20'],['Card payment','$18.60'],['Receipt','Keep for returns']],tip:'价格为澳元。澳洲商店常鼓励自带购物袋；receipt 的 p 不发音。'},
+  u18l1:{title:'公交站牌 · Route 246',image:'assets/scenes/melbourne-bus.jpg',alt:'乘客在墨尔本公交站向司机询问路线',rows:[['Route','246 · Downtown'],['Stop','Main Street'],['Fare','$3.00'],['Next stop','Library']],tip:'Get on 是上车；get off 是下车。'},
+  u18l2:{title:'行程卡 · Airport ride',rows:[['Destination','Airport · Terminal 2'],['Pickup','Main Street'],['Traffic','Heavy on highway'],['Drop-off','Terminal 2']],tip:'Drop me off at… 表示请在……让我下车。'},
+  u18l3:{title:'GP 预约卡 · Appointment',rows:[['Date','Thursday'],['Time','9:00 am'],['Reason','Sore throat, cough'],['Bring','Photo ID, Medicare card']],tip:'澳洲看全科医生常说 GP（general practitioner）。'},
+  u18l4:{title:'药品标签 · Pharmacy label',rows:[['Medicine','Pain relief'],['Directions','Follow the label'],['With food?','Ask the pharmacist'],['If worse','Contact a doctor']],tip:'真实用药请遵照药品标签和医护人员建议。'}
+};
+
+function renderSceneMaterial(id){
+  const material=sceneMaterials[id];
+  if(!material) return '';
+  return `<section class="scene-material">${material.image?`<img src="${material.image}" alt="${escapeHtml(material.alt)}" loading="lazy">`:''}<div class="material-paper"><div class="material-heading">${escapeHtml(material.title)}</div>${material.rows.map(([key,value])=>`<div class="material-row"><span>${escapeHtml(key)}</span><b>${escapeHtml(value)}</b></div>`).join('')}<div class="material-tip">${escapeHtml(material.tip)}</div></div></section>`;
+}
+
+function renderWordNotes(words=[]){
+  if(!words.length) return '';
+  return `<div class="word-notes"><div class="word-notes-title">📚 单词注释</div>${words.map(([word,pronunciation,meaning,usage])=>`<div class="word-note"><div><b>${escapeHtml(word)}</b><span>${escapeHtml(pronunciation)}</span></div><strong>${escapeHtml(meaning)}</strong><small>${escapeHtml(usage)}</small></div>`).join('')}</div>`;
+}
+
 function renderFooter(feedback=null){
   const q = currentLesson.questions[questionIndex];
-  const canSubmit = q.type==='choice' ? selectedAnswer!==null : q.type==='speak' ? selectedAnswer==='spoken' : Boolean(selectedAnswer);
+  const canSubmit = ['dialogue','vocab','roleplay'].includes(q.type) ? true : q.type==='choice' ? selectedAnswer!==null : q.type==='speak' ? selectedAnswer==='spoken' : Boolean(selectedAnswer);
   let html = '';
   if(feedback){
     html += `<div class="feedback ${feedback.good?'good':'bad'}">${escapeHtml(feedback.text)}</div>`;
@@ -636,7 +798,8 @@ function renderFooter(feedback=null){
   if(answered){
     html += `<button class="primary-btn" id="nextBtn">${questionIndex===currentLesson.questions.length-1?'查看结果':'继续'}</button>`;
   } else {
-    html += `<button class="primary-btn" id="checkBtn" ${canSubmit?'':'disabled'} style="${canSubmit?'':'opacity:.45;box-shadow:none'}">${q.type==='speak'?'完成跟读':q.type==='write'?'对照参考答案':'检查'}</button>`;
+    const actionLabel=q.type==='dialogue'?'对话听读完成':q.type==='vocab'?'单词复习完成':q.type==='roleplay'?'我说出自己的回应了':q.type==='speak'?'完成跟读':q.type==='write'?'对照参考答案':'检查';
+    html += `<button class="primary-btn" id="checkBtn" ${canSubmit?'':'disabled'} style="${canSubmit?'':'opacity:.45;box-shadow:none'}">${actionLabel}</button>`;
   }
   $('lessonFooter').innerHTML = html;
   if($('checkBtn')) $('checkBtn').addEventListener('click', checkAnswer);
@@ -652,7 +815,10 @@ function checkAnswer(){
   answered = true;
   let good = true;
   let text = '不错，继续。';
-  if(q.type==='choice'){
+  if(q.type==='dialogue'||q.type==='vocab'||q.type==='roleplay'){
+    correctCount++;
+    text = q.type==='vocab'?'记得听词、复述，再用自己的生活造句。':q.type==='roleplay'?'完成一轮真实回应练习。':'先听整体，再逐句跟读，留意单词注释里的用法。';
+  } else if(q.type==='choice'){
     good = selectedAnswer === q.answer;
     document.querySelectorAll('[data-answer]').forEach((b,i)=>{
       if(i===q.answer) b.classList.add('correct');
@@ -694,6 +860,7 @@ function finishLesson(){
   u.xp += earned;
   u.hearts = Math.min(5, u.hearts + 1);
   u.dailyDone += 1;
+  u.dailyStudyMinutes += currentLesson.estimatedMinutes || 5;
   updateStreak(u);
   save();
   $('lessonProgress').style.width = '100%';
@@ -782,13 +949,13 @@ function openSettings(){
   openSheet(`<div class="sheet-title">设置</div>
     <div class="sheet-copy">先把规则做得轻一点。能持续，比一天学两小时重要。</div>
     <div class="input-row"><label>当前学习者姓名</label><input id="nameInput" value="${escapeAttr(u.name)}" maxlength="10"></div>
-    <div class="input-row"><label>每日最小目标：完成几节</label><input id="goalInput" type="number" min="1" max="5" value="${state.dailyGoal}"></div>
+    <div class="input-row"><label>每日学习时长目标（分钟）</label><input id="goalInput" type="number" min="15" max="90" step="15" value="${state.dailyGoalMinutes}"></div>
     <button class="primary-btn" id="saveSettings">保存</button>
     <button class="secondary-btn" id="resetHearts">恢复 5 颗心</button>`);
   $('saveSettings').addEventListener('click',()=>{
     const name = $('nameInput').value.trim() || u.name;
-    const goal = Math.max(1, Math.min(5, Number($('goalInput').value)||1));
-    u.name = name; u.avatar = name.slice(0,1); state.dailyGoal = goal; save(); closeSheet(); render(); showToast('设置已保存');
+    const goal = Math.max(15, Math.min(90, Number($('goalInput').value)||30));
+    u.name = name; u.avatar = name.slice(0,1); state.dailyGoalMinutes = goal; save(); closeSheet(); render(); showToast('设置已保存');
   });
   $('resetHearts').addEventListener('click',()=>{ u.hearts=5; save(); closeSheet(); render(); showToast('心心补满了 💚'); });
 }
