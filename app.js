@@ -216,7 +216,7 @@ function buildSceneLesson(id,title,label,dialogue,words,choice1,speak1,choice2,s
     type:'roleplay',prompt:`第 ${index+1} 轮：先听对方说，再用自己的话回答。`,cue:line[1],cueZh:line[2],response:dialogue[index*2+1][1],responseZh:dialogue[index*2+1][2]
   }));
   return {id,title,label,estimatedMinutes:30,questions:[
-    {type:'dialogue',prompt:'先听完整对话，再逐句跟读。重点看下面的词汇注释。',dialogue,words},
+    {type:'dialogue',prompt:'先听完整对话，再逐句跟读。重点看下面的核心表达和词汇注释。',dialogue,words},
     ...vocabulary,
     {...choice1,type:'choice'},
     {type:'speak',prompt:speak1[0],phrase:speak1[1],zh:speak1[2],words:speak1[3]||[]},
@@ -224,6 +224,46 @@ function buildSceneLesson(id,title,label,dialogue,words,choice1,speak1,choice2,s
     {type:'speak',prompt:speak2[0],phrase:speak2[1],zh:speak2[2],words:speak2[3]||[]},
     ...roleplay
   ]};
+}
+
+function expandCompactLessons(){
+  lessonCatalog.forEach(unit=>unit.lessons.forEach(lesson=>{
+    if(lesson.estimatedMinutes || lesson.title.includes('回顾') || lesson.questions.length!==5) return;
+    const samples=[];
+    const addSample=(phrase,meaning,usage)=>{
+      if(!phrase || !/[a-z]/i.test(phrase) || phrase.trim().split(/\s+/).length<2) return;
+      if(samples.some(item=>item.phrase.toLowerCase()===phrase.toLowerCase())) return;
+      samples.push({phrase,meaning:meaning||'先理解整句意思，再模仿表达。',usage:usage||'先听读，再脱离提示自己说一遍。'});
+    };
+    lesson.questions.forEach(q=>{
+      if(q.type==='speak') addSample(q.phrase,q.zh,q.prompt);
+      else if(q.type==='choice' && q.options?.[q.answer]){
+        const meaning=q.prompt?.match(/[“「]([^”」]+)[”」]/)?.[1] || q.prompt;
+        addSample(q.options[q.answer],meaning,q.explain);
+      } else if(q.type==='write') addSample(q.modelAnswer,q.prompt,'参考句：先读懂，再试着换成自己的信息。');
+    });
+    if(samples.length<3) return;
+    const selected=samples.slice(0,3);
+    const dialogue=[
+      ['Coach','Let’s practice a few useful sentences.','我们来练几句实用英语。'],
+      ['You',selected[0].phrase,selected[0].meaning],
+      ['Coach','Good. Listen to the next sentence.','很好，听一听下一句。'],
+      ['You',selected[1].phrase,selected[1].meaning],
+      ['Coach','Now try one more.','现在再试一句。'],
+      ['You',selected[2].phrase,selected[2].meaning]
+    ];
+    const phraseCards=selected.map(item=>({type:'vocab',word:item.phrase,pronunciation:'整句听读',meaning:item.meaning,usage:item.usage,example:item.phrase,exampleZh:item.meaning}));
+    const roleplay=dialogue.filter((line,index)=>index%2===0&&dialogue[index+1]?.[0]==='You').map((line,index)=>({
+      type:'roleplay',prompt:`第 ${index+1} 轮：听提示后，先自己说，再看参考句。`,cue:line[1],cueZh:line[2],response:dialogue[index*2+1][1],responseZh:dialogue[index*2+1][2]
+    }));
+    lesson.questions=[
+      {type:'dialogue',prompt:'先听提示和示范句，再跟读三句。熟悉后试着不看中文说出来。',dialogue,words:selected.map(item=>[item.phrase,'整句听读',item.meaning,item.usage])},
+      ...phraseCards,
+      ...lesson.questions,
+      ...roleplay
+    ];
+    lesson.estimatedMinutes=30;
+  }));
 }
 
 const newStageStart=lessonCatalog.length;
@@ -556,6 +596,83 @@ for(const [stageIndex,unit] of lessonCatalog.slice(newStageStart).entries()){
   unit.lessons.push({id:`${unit.lessons[0].id.slice(0,-1)}r`,title:`阶段 ${stageIndex+6} 回顾`,label:'阶段复习',questions});
 }
 
+expandCompactLessons();
+
+const beginnerStages=[
+  {unit:'零基础 1 · 第一次开口',subtitle:'先会打招呼、说状态、介绍自己和听懂数字',icon:'🐣',lessons:[
+    buildSceneLesson('a0l1','你好，我叫……','打招呼与名字',[
+      ['Neighbor','Hi! I’m Mia. Are you new in the neighborhood?','你好！我叫 Mia。你刚搬到这个社区吗？'],['You','Yes. I’m Leo. Nice to meet you.','是的。我叫 Leo。很高兴认识你。'],['Neighbor','Nice to meet you, too. Where are you from?','我也很高兴认识你。你来自哪里？'],['You','I’m from China.','我来自中国。'],['Neighbor','Welcome! Do you live nearby?','欢迎！你住在附近吗？'],['You','Yes, I live on King Street.','是的，我住在 King 街。']
+    ],[['neighborhood','/ˈneɪbərˌhʊd/','社区；街区','new in the neighborhood 表示新搬到这个街区。'],['nice to meet you','/naɪs tə miːt juː/','很高兴认识你','初次见面时的固定表达。'],['be from','/bi frəm/','来自','I’m from + 国家或城市。'],['nearby','/ˌnɪrˈbaɪ/','附近','live nearby 表示住在附近。']],
+      {prompt:'初次见面时，哪句表示“很高兴认识你”？',options:['Nice to meet you.','See you yesterday.','I meet nice.','How much is it?'],answer:0,explain:'Nice to meet you 是初次见面的常用表达。'},['介绍自己','I’m Leo. Nice to meet you.','我叫 Leo。很高兴认识你。'],
+      {prompt:'“我来自中国”应该怎么说？',options:['I’m from China.','I’m China from.','I live China.','I have China.'],answer:0,explain:'介绍来自哪里用 be from。'},['说出自己来自哪里','I’m from China.','我来自中国。']),
+    buildSceneLesson('a0l2','你今天怎么样？','询问状态与简单回答',[
+      ['Friend','Hey, how are you today?','嗨，你今天怎么样？'],['You','I’m good, thanks. How about you?','我挺好的，谢谢。你呢？'],['Friend','I’m okay, but I’m a little tired.','我还可以，不过有点累。'],['You','Did you have a busy day?','你今天忙吗？'],['Friend','Yes, I worked a lot.','是的，我工作了很久。'],['You','I see. Let’s get some rest.','这样啊。我们休息一下吧。']
+    ],[['how about you','/haʊ əˈbaʊt juː/','你呢','回答后把问题礼貌地问回去。'],['okay','/oʊˈkeɪ/','还可以；好的','表示状态一般或接受安排。'],['a little','/ə ˈlɪtəl/','有一点','放在形容词前：a little tired。'],['get some rest','/ɡet səm rest/','休息一下','给疲惫的人建议休息。']],
+      {prompt:'别人问“How are you?”，哪个回答自然？',options:['I’m good, thanks.','I good thanks.','My are good.','I have fine.'],answer:0,explain:'I’m good, thanks 是自然的日常回答。'},['回答并问回对方','I’m good, thanks. How about you?','我挺好的，谢谢。你呢？'],
+      {prompt:'“我有点累”怎么说？',options:['I’m a little tired.','I little have tired.','I’m tired little a.','I do tired.'],answer:0,explain:'a little 放在形容词 tired 前。'},['说出自己的状态','I’m a little tired today.','我今天有点累。']),
+    buildSceneLesson('a0l3','我来自哪里，住在哪里','国家、语言与住处',[
+      ['Classmate','Where are you from, Leo?','Leo，你来自哪里？'],['You','I’m from China.','我来自中国。'],['Classmate','Do you speak English?','你会说英语吗？'],['You','A little. I’m learning English.','会一点。我正在学英语。'],['Classmate','Where do you live now?','你现在住在哪里？'],['You','I live in Melbourne with my wife.','我和妻子住在墨尔本。']
+    ],[['speak','/spiːk/','说；讲','speak English 表示会说英语。'],['a little','/ə ˈlɪtəl/','一点；少量','用来表达会一点、懂一点。'],['learn','/lɜːrn/','学习','I’m learning 表示我正在学习。'],['live in','/lɪv ɪn/','住在','城市前常用 in：live in Melbourne。']],
+      {prompt:'问别人来自哪里，应该说哪句？',options:['Where are you from?','Where you are?','What are you from?','Where do from?'],answer:0,explain:'Where are you from? 用来询问来自哪里。'},['说自己正在学英语','I’m learning English.','我正在学英语。'],
+      {prompt:'“我和妻子住在墨尔本”怎么说？',options:['I live in Melbourne with my wife.','I living Melbourne wife.','I have live with wife.','I lives at Melbourne.'],answer:0,explain:'live in + 城市；with my wife 表示和妻子一起。'},['介绍住处','I live in Melbourne with my wife.','我和妻子住在墨尔本。']),
+    buildSceneLesson('a0l4','数字、电话和时间','听懂并确认数字',[
+      ['Receptionist','What’s your phone number?','你的电话号码是多少？'],['You','It’s 0412 358 690.','是 0412 358 690。'],['Receptionist','Sorry, could you say the last three numbers again?','不好意思，最后三位数字能再说一遍吗？'],['You','Six nine zero.','六、九、零。'],['Receptionist','Thanks. Your appointment is at ten thirty.','谢谢。你的预约在十点半。'],['You','Ten thirty. Got it.','十点半。记住了。']
+    ],[['phone number','/foʊn ˈnʌmbər/','电话号码','提供电话时可以一个数字一个数字说。'],['last','/læst/','最后的','the last three numbers 是最后三位数字。'],['again','/əˈɡen/','再一次','Could you say that again? 可礼貌请求重复。'],['got it','/ɡɑːt ɪt/','明白了；记住了','确认自己听懂对方的信息。']],
+      {prompt:'没听清数字时，哪句最合适？',options:['Could you say that again?','I no hear.','What number it?','Say more loud.'],answer:0,explain:'Could you say that again? 礼貌地请对方重复。'},['请对方重复电话号码','Could you say the last three numbers again?','最后三位数字能再说一遍吗？'],
+      {prompt:'10:30 应该怎么读？',options:['Ten thirty.','Thirty ten.','Ten thirteen.','Three ten.'],answer:0,explain:'10:30 读作 ten thirty。'},['确认预约时间','Ten thirty. Got it.','十点半，记住了。'])
+  ]},
+  {unit:'零基础 2 · 身边的英语',subtitle:'从家人、家里、食物到每天的生活习惯',icon:'🏡',lessons:[
+    buildSceneLesson('a1l1','介绍家人和朋友','称呼与简单描述',[
+      ['Friend','Who’s this in the photo?','照片里这个人是谁？'],['You','This is my wife, Nana.','这是我妻子 Nana。'],['Friend','What does she do?','她是做什么工作的？'],['You','She works in an office.','她在办公室工作。'],['Friend','Do you have any brothers or sisters?','你有兄弟姐妹吗？'],['You','Yes. I have one older brother.','有。我有一个哥哥。']
+    ],[['photo','/ˈfoʊtoʊ/','照片','in the photo 表示在照片里。'],['wife','/waɪf/','妻子','复数是 wives。'],['work in','/wɜːrk ɪn/','在……工作','work in an office 表示在办公室工作。'],['older brother','/ˈoʊldər ˈbrʌðər/','哥哥','older 表示年纪更大；弟弟是 younger brother。']],
+      {prompt:'介绍照片中的人，哪句正确？',options:['This is my wife.','This my wife is.','She my wife.','This are wife.'],answer:0,explain:'This is my... 用来介绍一个人。'},['介绍妻子','This is my wife, Nana.','这是我妻子 Nana。'],
+      {prompt:'“她在办公室工作”怎么说？',options:['She works in an office.','She work office.','She is work office.','She working in office.'],answer:0,explain:'一般现在时 she 后动词加 -s。'},['介绍一位家人','She works in an office.','她在办公室工作。']),
+    buildSceneLesson('a1l2','家里有什么？','房间与物品位置',[
+      ['Guest','Your home is nice. Is there a kitchen?','你家很不错。有厨房吗？'],['You','Yes. There’s a small kitchen next to the living room.','有。客厅旁边有一个小厨房。'],['Guest','Where’s the bathroom?','洗手间在哪里？'],['You','It’s down the hall, on the left.','沿着走廊走，在左边。'],['Guest','Is there a towel in the bathroom?','洗手间里有毛巾吗？'],['You','Yes, it’s on the shelf.','有，在架子上。']
+    ],[['kitchen','/ˈkɪtʃən/','厨房','在厨房里：in the kitchen。'],['next to','/nekst tuː/','在……旁边','说明两个地点相邻。'],['hall','/hɔːl/','走廊','down the hall 表示沿走廊往前。'],['shelf','/ʃelf/','架子','单数 shelf，复数 shelves。']],
+      {prompt:'“客厅旁边有一个厨房”怎么说？',options:['There’s a kitchen next to the living room.','It have kitchen by living room.','There are a kitchen.','Kitchen next living room is.'],answer:0,explain:'There’s = There is，表示有一个；next to 表示旁边。'},['询问洗手间在哪里','Where’s the bathroom?','洗手间在哪里？'],
+      {prompt:'“毛巾在架子上”怎么说？',options:['The towel is on the shelf.','The towel on shelf are.','Towel is in the shelf.','The towel has shelf.'],answer:0,explain:'物品在表面上用 on。'},['告诉客人毛巾的位置','It’s on the shelf.','它在架子上。']),
+    buildSceneLesson('a1l3','吃什么，喝什么？','食物和个人喜好',[
+      ['Partner','Are you hungry?','你饿了吗？'],['You','A little. What would you like to eat?','有一点。你想吃什么？'],['Partner','I’d like some rice and chicken.','我想吃米饭和鸡肉。'],['You','Would you like some water, too?','你还想喝点水吗？'],['Partner','Yes, please. I like cold water.','好的。我喜欢凉水。'],['You','Here you are.','给你。']
+    ],[['hungry','/ˈhʌŋɡri/','饿的','Are you hungry? 询问对方饿不饿。'],['would like','/wʊd laɪk/','想要','比 want 更礼貌：I’d like...。'],['some','/səm/','一些','some rice / some water，常用于肯定句和礼貌请求。'],['here you are','/hɪr ju ɑːr/','给你','递东西给别人时使用。']],
+      {prompt:'礼貌地说“我想要一些米饭”，怎么说？',options:['I’d like some rice.','I like some rice now want.','I am like rice.','I’d some rice.'],answer:0,explain:'I’d like 是 I would like 的缩写，礼貌表达想要。'},['询问对方想吃什么','What would you like to eat?','你想吃什么？'],
+      {prompt:'“给你”递水时怎么说？',options:['Here you are.','Here you have.','You here is.','There you take.'],answer:0,explain:'Here you are 是递东西时的自然表达。'},['询问是否要喝水','Would you like some water?','你想喝点水吗？']),
+    buildSceneLesson('a1l4','我每天做什么','日常作息与频率',[
+      ['Coworker','What time do you get up on weekdays?','你工作日几点起床？'],['You','I usually get up at seven.','我通常七点起床。'],['Coworker','How do you get to work?','你怎么去上班？'],['You','I take the bus.','我坐公交车。'],['Coworker','Do you have breakfast at home?','你在家吃早饭吗？'],['You','Yes, I have eggs and toast.','是的，我吃鸡蛋和吐司。']
+    ],[['weekday','/ˈwiːkdeɪ/','工作日','weekdays 指周一到周五。'],['usually','/ˈjuːʒuəli/','通常','频率副词 usually 常放在实义动词前。'],['get up','/ɡet ʌp/','起床','get up at seven 是七点起床。'],['take the bus','/teɪk ðə bʌs/','坐公交','take + 交通工具表示乘坐。']],
+      {prompt:'“我通常七点起床”怎么说？',options:['I usually get up at seven.','I get usually up seven.','I usually gets up seven.','I am usually get up.'],answer:0,explain:'usually 放在动词 get 前；时间前用 at。'},['询问工作日几点起床','What time do you get up on weekdays?','你工作日几点起床？'],
+      {prompt:'“我坐公交去上班”怎么说？',options:['I take the bus to work.','I bus take work.','I go work by the bus take.','I takes bus to work.'],answer:0,explain:'take the bus 是乘坐公交车。'},['说说自己的早晨','I usually get up at seven.','我通常七点起床。'])
+  ]},
+  {unit:'零基础 3 · 带着英语出门',subtitle:'咖啡店、超市、公交和听不懂时怎么办',icon:'🧺',lessons:[
+    buildSceneLesson('a2l1','买一杯咖啡','菜单词汇与礼貌点单',[
+      ['Barista','Hi there. What can I get for you?','你好。想来点什么？'],['You','Can I have a small latte, please?','请给我一杯小杯拿铁，可以吗？'],['Barista','Sure. Would you like regular or oat milk?','好的。你要普通牛奶还是燕麦奶？'],['You','Oat milk, please.','请用燕麦奶。'],['Barista','For here or to go?','在店里喝还是带走？'],['You','To go, thanks.','带走，谢谢。']
+    ],[['barista','/bəˈriːstə/','咖啡师','在咖啡店制作咖啡的人。'],['latte','/ˈlɑːteɪ/','拿铁','a small latte 是一杯小杯拿铁。'],['oat milk','/oʊt mɪlk/','燕麦奶','点单时可替换普通牛奶。'],['to go','/tə ɡoʊ/','带走','美式表达；澳洲也常听到 takeaway。']],
+      {prompt:'礼貌地点一杯小杯拿铁，选哪句？',options:['Can I have a small latte, please?','Give me small latte.','I have latte please?','Can small latte me?'],answer:0,explain:'Can I have...please? 是礼貌点单句型。'},['选择牛奶种类','Oat milk, please.','请用燕麦奶。'],
+      {prompt:'“带走”怎么说？',options:['To go.','For here.','Go to here.','Take go.'],answer:0,explain:'To go 表示带走；for here 表示在店内吃喝。'},['回答在店内喝还是带走','To go, thanks.','带走，谢谢。']),
+    buildSceneLesson('a2l2','拿着清单逛超市','找商品、数量与价格',[
+      ['You','Excuse me, where can I find the eggs?','打扰一下，请问鸡蛋在哪里？'],['Staff','They’re in aisle five, next to the milk.','在五号通道，牛奶旁边。'],['You','Thanks. I also need some bread.','谢谢。我还需要一些面包。'],['Staff','The bread is in aisle two.','面包在二号通道。'],['You','How much are these eggs?','这些鸡蛋多少钱？'],['Staff','They’re four dollars a dozen.','一打四美元。']
+    ],[['aisle','/aɪl/','通道；过道','s 不发音；aisle five 是五号通道。'],['find','/faɪnd/','找到','Where can I find...? 询问商品在哪里。'],['also','/ˈɔːlsoʊ/','也；还','补充清单上的另一项。'],['a dozen','/ə ˈdʌzən/','一打；十二个','four dollars a dozen 表示一打四美元。']],
+      {prompt:'在超市礼貌询问鸡蛋在哪里，怎么说？',options:['Where can I find the eggs?','Where eggs can?','I find egg what place?','Where is find eggs?'],answer:0,explain:'Where can I find...? 是询问商品位置的实用句型。'},['询问商品位置','Where can I find the eggs?','请问鸡蛋在哪里？'],
+      {prompt:'“一打鸡蛋”里的 a dozen 是多少个？',options:['12 个','10 个','6 个','20 个'],answer:0,explain:'a dozen 表示十二个。'},['补充购物清单','I also need some bread.','我还需要一些面包。']),
+    buildSceneLesson('a2l3','坐公交去市中心','看线路、上车和下车',[
+      ['You','Excuse me, does this bus go downtown?','打扰一下，这辆公交去市中心吗？'],['Driver','Yes. Get on here and get off at City Hall.','去的。在这里上车，在市政厅下车。'],['You','How many stops is that?','还要坐几站？'],['Driver','Five stops. I’ll let you know.','五站。我会告诉你。'],['You','Can I tap my card to pay?','我可以刷卡付款吗？'],['Driver','Yes, just tap it when you get on.','可以，上车时刷一下就行。']
+    ],[['downtown','/ˈdaʊnˌtaʊn/','市中心','美式常用；澳洲也常说 city centre。'],['get on','/ɡet ɑːn/','上车','公交或火车都可以用 get on。'],['get off','/ɡet ɔːf/','下车','在某站下车：get off at + 地点。'],['tap','/tæp/','轻触；感应支付','tap my card 表示刷感应卡。']],
+      {prompt:'“这辆公交去市中心吗？”怎么问？',options:['Does this bus go downtown?','This bus downtown goes?','Do bus go city?','Is bus go downtown?'],answer:0,explain:'第三人称单数 bus 用 Does 开头提问。'},['询问还要坐几站','How many stops is that?','还要坐几站？'],
+      {prompt:'get off 表示什么？',options:['下车','上车','买票','转弯'],answer:0,explain:'get off 是下车；get on 是上车。'},['询问能否刷卡','Can I tap my card to pay?','我可以刷卡付款吗？']),
+    buildSceneLesson('a2l4','没听懂时怎么继续','请求重复、放慢和确认',[
+      ['Receptionist','Your class starts at quarter past six.','你的课六点一刻开始。'],['You','Sorry, could you say that again?','不好意思，你能再说一遍吗？'],['Receptionist','It starts at six fifteen.','六点十五开始。'],['You','Could you speak a little more slowly, please?','你可以说慢一点吗？'],['Receptionist','Of course. Six fifteen.','当然。六点十五。'],['You','Thanks. So, six fifteen on Tuesday?','谢谢。所以是周二六点十五，对吗？']
+    ],[['quarter past','/ˈkwɔːrtər pæst/','过一刻','quarter past six 是六点十五。'],['say that again','/seɪ ðæt əˈɡen/','再说一遍','礼貌请求重复信息。'],['slowly','/ˈsloʊli/','慢慢地','speak more slowly 表示说慢一点。'],['so','/soʊ/','所以；那么','用 so 重述并确认自己听到的信息。']],
+      {prompt:'没听清时，哪句最礼貌？',options:['Could you say that again?','Again now.','You repeat me.','I don’t hearing.'],answer:0,explain:'Could you... 是礼貌请求；say that again 表示再说一遍。'},['请对方说慢一点','Could you speak a little more slowly?','你可以说慢一点吗？'],
+      {prompt:'quarter past six 是几点？',options:['六点十五','六点半','六点四十五','五点十五'],answer:0,explain:'quarter past six 是六点过一刻，即 6:15。'},['复述时间并确认','So, six fifteen on Tuesday?','所以是周二六点十五，对吗？'])
+  ]}
+];
+
+beginnerStages.forEach((unit,index)=>{
+  const bank=unit.lessons.flatMap(lesson=>lesson.questions.filter(question=>question.type==='choice'));
+  unit.lessons.push({id:`a${index}lr`,title:`零基础阶段 ${index+1} 复习`,label:'间隔复习',estimatedMinutes:10,questions:Array.from({length:5},(_,i)=>JSON.parse(JSON.stringify(bank[Math.floor(i*bank.length/5)])))});
+});
+lessonCatalog.unshift(...beginnerStages);
+
 const defaultState = {
   activeUser: 'me',
   users: {
@@ -624,7 +741,7 @@ function render(){
   $('goalRing').style.strokeDasharray = `${pct} ${100-pct}`;
   $('goalText').textContent = `${done}/${state.dailyGoalMinutes}分`;
   $('heroTitle').textContent = done >= state.dailyGoalMinutes ? '今天的学习目标完成了 ✓' : `今天学够 ${state.dailyGoalMinutes} 分钟`;
-  $('heroCopy').textContent = done >= state.dailyGoalMinutes ? '今天的计划完成了。想继续就继续，不用给自己加压。' : `完成一节约 5 分钟基础课，或一节约 30 分钟情景课。`;
+  $('heroCopy').textContent = done >= state.dailyGoalMinutes ? '今天的计划完成了。想继续就继续，不用给自己加压。' : `一节完整课约 30 分钟：听对话、学词句、跟读，再自己回应。`;
   renderCouple();
   renderPath();
 }
@@ -766,6 +883,9 @@ function renderQuestion(){
 }
 
 const sceneMaterials={
+  a2l1:{title:'咖啡店菜单 · Beginner order',image:'assets/scenes/melbourne-cafe.jpg',alt:'墨尔本街区咖啡店里顾客向咖啡师点单',rows:[['Small latte','$5.00'],['Oat milk','+$0.80'],['For here','店内喝'],['To go','带走']],tip:'先看饮品、牛奶选项和堂食/外带，再用 Can I have…? 点单。价格为示例澳元。'},
+  a2l2:{title:'超市购物清单 · First shop',image:'assets/scenes/australian-supermarket.jpg',alt:'顾客在澳洲超市向店员询问商品位置',rows:[['☐ Eggs','Aisle 5'],['☐ Milk','Aisle 5 · Dairy'],['☐ Bread','Aisle 2 · Bakery'],['☐ Apples','Fruit & veg']],tip:'Aisle 是货架通道；Dairy 是乳制品区；Fruit & veg 是蔬果区。商品位置是练习示例。'},
+  a2l3:{title:'公交线路卡 · City bus',image:'assets/scenes/melbourne-bus.jpg',alt:'乘客在墨尔本公交站向司机询问路线',rows:[['Route','246 · City'],['Board','Main Street'],['Get off','City Hall'],['Fare','Tap your card']],tip:'Board 表示上车地点；get off 表示下车。路线为练习示例。'},
   u17l1:{title:'咖啡店菜单 · Counter Coffee',image:'assets/scenes/melbourne-cafe.jpg',alt:'墨尔本街区咖啡店里顾客向咖啡师点单',rows:[['Flat white','$4.80'],['Latte','$5.00'],['Iced latte','$5.50'],['Oat milk','+$0.80']],tip:'价格为澳元。For here = 店内喝；To go = 带走。'},
   u17l2:{title:'简餐菜单 · All-day menu',image:'assets/scenes/melbourne-cafe.jpg',alt:'澳洲街区咖啡店的柜台与顾客',rows:[['Eggs on toast','$14'],['Chicken sandwich','$16'],['Soup of the day','$12'],['Tap water','Free']],tip:'价格为澳元。问有没有空桌：Do you have a table for two?'},
   u17l3:{title:'购物清单 · Shopping list',image:'assets/scenes/australian-supermarket.jpg',alt:'顾客在澳洲超市向店员询问商品位置',rows:[['☐ Eggs','Aisle 5'],['☐ Milk','Aisle 5 · Dairy'],['☐ Bread','Aisle 2 · Bakery'],['Special','2 for $5.00']],tip:'价格为澳元。Aisle 是货架通道；on sale 表示打折。'},
@@ -785,7 +905,7 @@ function renderSceneMaterial(id){
 
 function renderWordNotes(words=[]){
   if(!words.length) return '';
-  return `<div class="word-notes"><div class="word-notes-title">📚 单词注释</div>${words.map(([word,pronunciation,meaning,usage])=>`<div class="word-note"><div><b>${escapeHtml(word)}</b><span>${escapeHtml(pronunciation)}</span></div><strong>${escapeHtml(meaning)}</strong><small>${escapeHtml(usage)}</small></div>`).join('')}</div>`;
+  return `<div class="word-notes"><div class="word-notes-title">📚 核心表达与单词注释</div>${words.map(([word,pronunciation,meaning,usage])=>`<div class="word-note"><div><b>${escapeHtml(word)}</b><span>${escapeHtml(pronunciation)}</span></div><strong>${escapeHtml(meaning)}</strong><small>${escapeHtml(usage)}</small></div>`).join('')}</div>`;
 }
 
 function renderFooter(feedback=null){
