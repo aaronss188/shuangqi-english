@@ -452,7 +452,7 @@ const defaultState = {
   activeUser: 'me',
   users: {
     me: { name: '岄', avatar: '岄', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0 },
-    partner: { name: '搭档', avatar: '伴', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0 }
+    partner: { name: '娜娜', avatar: '娜', xp: 0, streak: 0, hearts: 5, completed: [], mistakes: [], lastStudyDate: null, dailyDone: 0 }
   },
   dailyGoal: 1,
   lastGlobalDate: null
@@ -476,12 +476,15 @@ function loadState(){
   } catch { return clone(defaultState); }
 }
 function mergeState(base, saved){
+  const partner = { ...base.users.partner, ...(saved.users?.partner || {}) };
+  if(partner.name === '搭档') partner.name = '娜娜';
+  if(partner.avatar === '伴') partner.avatar = '娜';
   return {
     ...base,
     ...saved,
     users: {
       me: { ...base.users.me, ...(saved.users?.me || {}) },
-      partner: { ...base.users.partner, ...(saved.users?.partner || {}) }
+      partner
     }
   };
 }
@@ -856,7 +859,7 @@ function exportState(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = '双栖英语-学习进度.json'; a.click();
+  a.href = url; a.download = '娜娜的澳洲起点-学习进度.json'; a.click();
   URL.revokeObjectURL(url);
 }
 function importState(e){

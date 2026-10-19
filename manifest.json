@@ -1,7 +1,7 @@
 {
-  "name": "双栖英语",
-  "short_name": "双栖英语",
-  "description": "两个人一起用的轻量英语打卡站",
+  "name": "娜娜的澳洲起点",
+  "short_name": "娜娜的澳洲起点",
+  "description": "娜娜和搭档一起学习英语，开启澳洲新生活",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f7fbf2",
