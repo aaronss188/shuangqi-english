@@ -192,6 +192,262 @@ const lessonCatalog = [
   }
 ];
 
+function buildLesson(id,title,label,rule,targets,listen,finalTask){
+  const seed=Number(id.slice(-1))||1;
+  const select=(prompt,correct,wrongs,explain,n)=>{
+    const choices=[correct,...wrongs], shift=(seed+n*3)%choices.length;
+    const options=choices.slice(shift).concat(choices.slice(0,shift));
+    return {type:'choice',prompt,options,answer:options.indexOf(correct),explain};
+  };
+  return {id,title,label,questions:[
+    select(...rule,0),
+    ...targets.map((target,index)=>select(target[5]||`选择“${target[0]}”的自然英文表达。`,target[1],target.slice(2,5),`自然表达是 “${target[1]}”。`,index+1)),
+    select('先听英文，再选出对应意思。',listen[1],listen[2],listen[3],3,{listen:listen[0]}),
+    finalTask
+  ].map((q,index)=>index===3?{...q,listen:listen[0]}:q)};
+}
+
+const newStageStart=lessonCatalog.length;
+lessonCatalog.push(
+  {
+    unit:'阶段 6 · 家庭与日常',subtitle:'家人、家务、工作日与休闲安排',icon:'🏠',lessons:[
+      buildLesson('u8l1','介绍家人','家庭表达',
+        ['选择正确的所有格：___ sister is a nurse.','My',['Me','I','Mine'],'My 是形容词性物主代词，放在名词 sister 前。'],
+        [['这是我哥哥。','This is my older brother.','This is me older brother.','This is I older brother.','This is mine older brother.'],['她有两个孩子。','She has two children.','She have two children.','She is have two children.','She has two childs.']],
+        ['My parents live in a small town.','我父母住在一个小镇。',['我父母在一个小镇工作。','我和父母去小镇。','我父母来自一个大城市。'],'听 live in，抓住居住地点。'],
+        {type:'speak',prompt:'介绍一位家人和一个特点。',phrase:'My wife is kind, and she enjoys reading.','zh':'我妻子很友善，她喜欢阅读。'}),
+      buildLesson('u8l2','描述房间与物品','家居词汇',
+        ['“客厅里有一把椅子”应选哪句？','There is a chair in the living room.',['There are a chair in the living room.','It has a chair in living room.','There is chair at living room.'],'单数物品用 There is；房间前用 in。'],
+        [['灯在沙发旁边。','The lamp is next to the sofa.','The lamp is between the sofa.','The lamp next the sofa.','The lamp is near of sofa.'],['钥匙在桌子上。','The keys are on the table.','The keys is on the table.','The keys are in the table.','Keys on table is.']],
+        ['There are two bedrooms upstairs.','楼上有两间卧室。',['楼下有两间卧室。','楼上有一间浴室。','楼上有两间客厅。'],'听 two bedrooms 和 upstairs。'],
+        {type:'speak',prompt:'说说家里一个物品在哪里。',phrase:'My phone is on the table next to the window.','zh':'我的手机在窗边的桌子上。'}),
+      buildLesson('u8l3','家务怎么分工','日常动词',
+        ['“我周末洗衣服”怎么说？','I do the laundry on weekends.',['I make the laundry on weekends.','I am do laundry on weekends.','I does the laundry on weekends.'],'do the laundry 是“洗衣服”的常用搭配。'],
+        [['她每天做晚饭。','She makes dinner every day.','She make dinner every day.','She does dinner every day.','She is make dinner every day.'],['我们轮流打扫厨房。','We take turns cleaning the kitchen.','We take turn clean the kitchen.','We take turns to cleaning kitchen.','We are take turns clean.']],
+        ['He usually takes out the rubbish after dinner.','他通常晚饭后倒垃圾。',['他通常晚饭前买垃圾袋。','他每天早上做晚饭。','他晚饭后洗衣服。'],'听 usually、after dinner 和 takes out。'],
+        {type:'write',prompt:'写两句介绍你们家谁做什么家务。',modelAnswer:'I usually cook dinner. My wife takes out the rubbish.'}),
+      buildLesson('u8l4','工作日作息','时间与习惯',
+        ['“我早上八点开始工作”怎么说？','I start work at eight in the morning.',['I am start work in eight morning.','I starts work at eight in the morning.','I start to work on eight morning.'],'start work 表示开始工作；具体时刻前用 at。'],
+        [['我下班后回家。','I go home after work.','I go to home after work.','I am go home after work.','I goes home after work.'],['午休通常持续半小时。','My lunch break usually lasts half an hour.','My lunch break usual last half hour.','My lunch break is last half hour.','My lunch break lasts usually a half.']],
+        ['I leave home at seven forty-five and walk to the bus stop.','我七点四十五离家，步行去公交站。',['我七点四十五到家，坐公交去上班。','我七点半离家，开车去车站。','我八点离开办公室去公交站。'],'听 leave home 的时间和出行方式。'],
+        {type:'speak',prompt:'用两句描述你的工作日早晨。',phrase:'I get up at seven and leave home at eight.','zh':'我七点起床，八点出门。'}),
+      buildLesson('u8l5','休闲与兴趣','喜欢做什么',
+        ['“我喜欢散步”怎么说？','I enjoy going for walks.',['I enjoy go for walks.','I am enjoy walking.','I enjoys going for walks.'],'enjoy 后面接动词 -ing 形式。'],
+        [['她喜欢听播客。','She likes listening to podcasts.','She likes listen to podcasts.','She like listening podcasts.','She is like podcasts.'],['我们有时周末去徒步。','We sometimes go hiking on weekends.','We sometime goes hiking on weekends.','We go sometimes hike in weekends.','We are go hiking weekends.']],
+        ['In my free time, I like watching movies with my friends.','空闲时，我喜欢和朋友看电影。',['工作时，我喜欢和朋友看电影。','空闲时，我喜欢独自做饭。','周末时，我和朋友去上班。'],'听 free time 和 watching movies。'],
+        {type:'write',prompt:'写三句介绍一个兴趣：做什么、多久一次、为什么喜欢。',modelAnswer:'I enjoy cooking. I cook three times a week because it helps me relax.'})
+    ]
+  },
+  {
+    unit:'阶段 7 · 饮食、购物与服务',subtitle:'点餐、数量、付款和处理小问题',icon:'🛍️',lessons:[
+      buildLesson('u9l1','说出食物与偏好','食物词汇',
+        ['“我不吃牛肉”怎么说？','I don’t eat beef.',['I am not eat beef.','I doesn’t eat beef.','I don’t eats beef.'],'一般现在时否定：I don’t + 动词原形。'],
+        [['我更喜欢茶。','I prefer tea.','I am prefer tea.','I prefers tea.','I preference tea.'],['这道菜有鸡肉和米饭。','This dish comes with chicken and rice.','This dish come with chickens and rice.','This dish is come chicken rice.','This dish has with chicken and rice.']],
+        ['I’m allergic to peanuts, so I can’t eat this sauce.','我对花生过敏，所以不能吃这种酱。',['我喜欢花生，所以想要多加酱。','我对牛奶过敏，不能吃米饭。','我对海鲜过敏，想要这种酱。'],'注意 peanuts 和 sauce 是关键食材信息。'],
+        {type:'speak',prompt:'表达一种饮食偏好或忌口。',phrase:'I don’t eat pork, but I can eat chicken.','zh':'我不吃猪肉，但可以吃鸡肉。'}),
+      buildLesson('u9l2','可数与不可数','数量表达',
+        ['“两杯咖啡”怎么说？','two cups of coffee',['two coffee cups','two cup of coffees','two cups coffee','two coffees cup'],'coffee 通常不可数；用 cups of 表示具体数量。'],
+        [['一点牛奶','a little milk','a few milk','a little milks','little of milk'],['几个苹果','a few apples','a little apples','a few apple','few of apples']],
+        ['Could I have a bottle of water and two sandwiches?','请给我一瓶水和两个三明治。',['请给我两瓶果汁和一份沙拉。','请给我一杯咖啡和一个苹果。','请给我一瓶牛奶和两块蛋糕。'],'听数量词 bottle of 和 two sandwiches。'],
+        {type:'write',prompt:'写一句购物清单，至少包含一种饮料和两种食物。',modelAnswer:'I need a bottle of water, some rice, and three apples.'}),
+      buildLesson('u9l3','在餐厅点餐','礼貌请求',
+        ['更礼貌地请求菜单，应该说？','Could we see the menu, please?',['Give us menu.','We can see menu?','Could we seeing a menu?'],'Could we...? 是礼貌询问；menu 前可加 the。'],
+        [['我想要一份鸡肉沙拉。','I’d like a chicken salad.','I like have chicken salad.','I’d like chicken salads.','I am like a chicken salad.'],['可以不要洋葱吗？','Could I have it without onions?','Can I have no onion in it?','Could I have it with no onions not?','I could without onions have it?']],
+        ['Would you like anything to drink?','您想喝点什么吗？',['您想要账单吗？','您想吃甜点吗？','您想坐靠窗的位置吗？'],'这是服务员询问饮料的常见说法。'],
+        {type:'speak',prompt:'点一份餐，并提出一个简单要求。',phrase:'I’d like the grilled fish, with no onions, please.','zh':'我想要烤鱼，不要洋葱，谢谢。'}),
+      buildLesson('u9l4','购物与价格','尺码和金额',
+        ['“这件衬衫多少钱？”怎么问？','How much is this shirt?',['How many is this shirt?','How much this shirt cost?','How many money is shirt?'],'问单件商品价格用 How much is...?'],
+        [['我可以试穿吗？','Can I try it on?','Can I try on it?','Do I try it?','Can I wear it up?'],['有小一号的吗？','Do you have this in a smaller size?','Do you have a small more size?','Is there smaller one size?','You have this size little?']],
+        ['It’s on sale for twenty dollars, but the blue one is thirty.','它打折后是二十美元，但蓝色那件是三十美元。',['两件都是二十美元。','蓝色那件是二十美元，另一件三十美元。','打折后是三十美元。'],'听清颜色与价格的对应关系。'],
+        {type:'speak',prompt:'问能否试穿并确认价格。',phrase:'Can I try this on? How much is it?','zh':'我可以试穿这件吗？多少钱？'}),
+      buildLesson('u9l5','退换与解决问题','服务沟通',
+        ['“我想换一个尺寸”怎么说？','I’d like to exchange it for a different size.',['I like change it in different size.','I’d like exchanging for a other size.','I want exchange to a different sizes.'],'exchange A for B 表示把 A 换成 B。'],
+        [['收据在这里。','Here is my receipt.','Here are my receipt.','This is have my receipt.','Here my receipt is it.'],['它有点坏了。','It’s a little damaged.','It has a little damage it.','It’s little damage.','It is a little breaking.']],
+        ['I bought this yesterday, but it doesn’t work. Could I get a refund?','我昨天买的这个，但它不能用。我可以退款吗？',['我昨天买的这个很好用，能再买一个吗？','我今天买的这个不能用，可以换颜色吗？','我上周买的这个有点小，能试穿吗？'],'先听购买时间和问题，再听退款请求。'],
+        {type:'write',prompt:'写一条简短消息：说明商品问题并提出解决办法。',modelAnswer:'I bought this kettle yesterday, but it doesn’t work. Could I exchange it, please?'})
+    ]
+  },
+  {
+    unit:'阶段 8 · 出行与公共信息',subtitle:'交通、方向、时刻表和常见标识',icon:'🚌',lessons:[
+      buildLesson('u10l1','方位与地点','介词入门',
+        ['“银行在邮局对面”怎么说？','The bank is across from the post office.',['The bank is across the post office.','The bank across from is post office.','The bank is opposite to the post office.'],'across from 表示在……对面。'],
+        [['药店在超市旁边。','The pharmacy is next to the supermarket.','The pharmacy is next the supermarket.','The pharmacy is near to the supermarket.','The pharmacy is next of supermarket.'],['咖啡店在街角。','The cafe is on the corner.','The cafe is in the corner of street.','The cafe is at corner street.','The cafe on corner is.']],
+        ['The library is between the school and the community centre.','图书馆在学校和社区中心之间。',['图书馆在学校对面，社区中心旁边。','社区中心在图书馆和学校之间。','图书馆在学校后面，社区中心前面。'],'between A and B 表示在两者之间。'],
+        {type:'speak',prompt:'用一个方位词描述附近地点。',phrase:'The bus stop is in front of the supermarket.','zh':'公交站在超市前面。'}),
+      buildLesson('u10l2','理解公交和火车信息','交通时刻',
+        ['“下一班火车十分钟后到”怎么说？','The next train arrives in ten minutes.',['The next train arrives after ten minute ago.','The next train is arrive ten minutes.','Next train arriving on ten minutes.'],'in ten minutes 表示十分钟后。'],
+        [['我要一张单程票。','I need a one-way ticket.','I need one way tickets.','I need a single travel.','I am need a one-way ticket.'],['这趟车去机场吗？','Does this train go to the airport?','Is this train goes to airport?','Do this train go airport?','This train going to the airport?']],
+        ['The number twelve bus leaves from stop B at quarter past nine.','12路公交九点一刻从 B 站台发车。',['12路公交九点半到达 B 站台。','21路公交九点一刻从 A 站台发车。','12路公交九点差一刻到机场。'],'重点听线路号、站台和 quarter past nine。'],
+        {type:'speak',prompt:'询问要坐哪路车去机场。',phrase:'Which bus should I take to the airport?','zh':'去机场我应该坐哪路公交？'}),
+      buildLesson('u10l3','使用路线指引','顺序与转弯',
+        ['“在第二个路口右转”怎么说？','Turn right at the second intersection.',['Turn right in second traffic.','Turn to right at two intersection.','Right turn on the second corner.'],'at the second intersection 是在第二个路口。'],
+        [['沿这条路直走。','Go straight along this road.','Go straight in this road.','Go direct this road.','Walk straightly to this street.'],['过桥后左转。','Turn left after the bridge.','Turn left before cross bridge.','Turn to left after bridge is.','After the bridge turn to left side.']],
+        ['Walk past the park, then cross the street. The station is on your left.','经过公园，然后过马路。车站在你的左边。',['穿过公园后右转，车站在右边。','经过车站后过马路，公园在左边。','沿街直走，车站在公园后面。'],'past 是经过；on your left 是在你的左边。'],
+        {type:'write',prompt:'写两步简单路线：从家走到附近的商店。',modelAnswer:'Go straight along this road. Turn left at the corner. The shop is next to the cafe.'}),
+      buildLesson('u10l4','看懂公共标识','生活阅读',
+        ['标识 “Keep off the grass” 是什么意思？','请勿踩踏草坪',['请在草坪上等候','请沿草坪边走','请修剪草坪'],'keep off 表示不要靠近或踩踏。'],
+        [['No entry','禁止进入','请进入','入口在此','禁止停车'],['Staff only','仅限员工进入','员工请离开','请在此工作','员工停车场']],
+        ['Please keep your ticket until the end of your journey.','请保留车票，直到行程结束。',['请在旅程开始时购买车票。','请在到站后丢掉车票。','请把车票交给司机。'],'听 until the end，理解保留车票的时间。'],
+        {type:'speak',prompt:'读出并解释一个简单标识。',phrase:'Please queue here and wait for the next bus.','zh':'请在这里排队，等候下一班公交。'}),
+      buildLesson('u10l5','旅行中的小状况','求助与说明',
+        ['“我找不到我的行李”怎么说？','I can’t find my luggage.',['I don’t can find my luggage.','I can’t found my luggage.','I am not find my baggage.'],'can’t 后接动词原形 find。'],
+        [['我的航班延误了。','My flight has been delayed.','My flight is delay.','My flight delayed is.','My flight has delay.'],['我应该去哪个柜台？','Which counter should I go to?','Which counter I should go?','Where counter should I going?','What counter do I should go?']],
+        ['Your gate has changed. Please go to gate twenty-four.','您的登机口有变，请前往 24 号登机口。',['您的航班取消，请前往 24 号柜台。','您的登机口是 42 号，请等待通知。','您的航班延误，请前往 20 号登机口。'],'听清 changed 和 gate twenty-four。'],
+        {type:'speak',prompt:'在机场说明行李没有到。',phrase:'My luggage hasn’t arrived. Where should I go for help?','zh':'我的行李还没到。我应该去哪里寻求帮助？'})
+    ]
+  },
+  {
+    unit:'阶段 9 · 句型升级',subtitle:'正在发生、能力建议、比较和连接词',icon:'🧩',lessons:[
+      buildLesson('u11l1','现在正在做什么','现在进行时',
+        ['“她正在做饭”怎么说？','She is cooking.',['She cooks now.','She cooking.','She does cooking.'],'现在进行时：be + 动词-ing。'],
+        [['我现在在等公交。','I’m waiting for the bus now.','I wait for the bus now.','I am wait the bus now.','I waiting bus now.'],['他们正在看电视。','They are watching TV.','They is watching TV.','They watch TV now.','They are watch TV.']],
+        ['We’re having dinner right now. Can I call you later?','我们现在正在吃晚饭。我晚点给你打电话好吗？',['我们晚点吃饭，现在可以给你打电话。','我们正在打电话，晚点吃晚饭好吗？','我们吃完晚饭了，现在给你打电话。'],'right now 表示此刻；later 表示稍后。'],
+        {type:'speak',prompt:'说说你现在正在做什么。',phrase:'I’m learning English and listening to music.','zh':'我正在学英语、听音乐。'}),
+      buildLesson('u11l2','会做与请求帮助','can / could',
+        ['礼貌地请别人重复一遍，怎么说？','Could you say that again, please?',['You can say again?','Could you to say again?','Do you repeat that?'],'Could you...? 是礼貌请求；后接动词原形。'],
+        [['我会开车。','I can drive.','I can to drive.','I am can drive.','I cans drive.'],['你能帮我一下吗？','Can you give me a hand?','Can you to help my hand?','Do you can help me?','Can you helping me?']],
+        ['Could you speak a little more slowly?','你可以说得稍微慢一点吗？',['你可以说得更大声吗？','你可以再说一遍吗？','你可以说得快一点吗？'],'听 more slowly，是请求放慢语速。'],
+        {type:'speak',prompt:'礼貌请求对方说慢一点。',phrase:'Could you speak a little more slowly, please?','zh':'您可以说得稍微慢一点吗？'}),
+      buildLesson('u11l3','提出建议与说明责任','should / have to',
+        ['“你应该多休息”怎么说？','You should get more rest.',['You should to get more rest.','You have get more rest.','You are should rest more.'],'should 后面接动词原形，表达建议。'],
+        [['我必须明天早起。','I have to get up early tomorrow.','I have get up early tomorrow.','I must to get up early tomorrow.','I has to get up early tomorrow.'],['你不必现在决定。','You don’t have to decide now.','You mustn’t decide now.','You don’t have decide now.','You haven’t to decide now.']],
+        ['You should bring a jacket. It might get cold tonight.','你应该带件外套，今晚可能会变冷。',['你必须带伞，今晚一定下雨。','你不应该穿外套，今晚很热。','你可以带夹克，明天会变暖。'],'听建议 should bring 和可能性 might get cold。'],
+        {type:'speak',prompt:'给朋友一个关于休息或出行的建议。',phrase:'You should take a short break and drink some water.','zh':'你应该休息一会儿，喝点水。'}),
+      buildLesson('u11l4','比较两种选择','比较级',
+        ['“火车比公交快”怎么说？','The train is faster than the bus.',['The train is more fast than the bus.','The train faster that the bus.','The train is fastest than bus.'],'短形容词 fast 变比较级 faster，后接 than。'],
+        [['这个房间比那个大。','This room is bigger than that one.','This room is more big than that one.','This room bigger that one.','This room is biggest than that one.'],['今天比昨天暖和。','It’s warmer today than yesterday.','It’s more warm today that yesterday.','It warmer than yesterday today.','It’s warmest today than yesterday.']],
+        ['The blue phone is cheaper, but the black one has a better camera.','蓝色手机更便宜，但黑色手机的相机更好。',['蓝色手机相机更好，黑色手机更便宜。','两部手机价格相同，黑色相机更好。','黑色手机更便宜，但蓝色相机更好。'],'比较价格和相机时留意 cheaper 与 better 的对应对象。'],
+        {type:'write',prompt:'写两句比较公交和火车，至少写出一个优点和一个理由。',modelAnswer:'The train is faster than the bus, but the bus is cheaper. I take the bus because it costs less.'}),
+      buildLesson('u11l5','连接想法','and / but / because / so',
+        ['“我很累，所以今晚要早点睡”怎么说？','I’m tired, so I’m going to bed early tonight.',['I’m tired because I go to bed early tonight.','I’m tired but I’m going to bed early tonight.','I’m tired so going bed early tonight.'],'so 引出结果；because 引出原因。'],
+        [['我喜欢散步，因为它让我放松。','I like walking because it helps me relax.','I like walk so it helps relax me.','I like walking but it helps me relaxing.','I like walking because helps relax.'],['天气冷，但阳光很好。','It’s cold, but it’s sunny.','It’s cold, so it’s sunny.','It cold but sunny is.','It’s cold because sunny.']],
+        ['I missed the bus, so I took a taxi because I was late.','我错过了公交，所以因为快迟到了就打了出租车。',['我赶上了公交，所以因为很早就打了出租车。','我错过了出租车，所以坐公交，因为不晚。','我错过公交和出租车，但迟到了。'],'区分 so 后的结果和 because 后的原因。'],
+        {type:'write',prompt:'写两句介绍一个习惯，并用 because 解释原因。',modelAnswer:'I practise English every day because I want to speak more confidently.'})
+    ]
+  },
+  {
+    unit:'阶段 10 · 讲经历与计划',subtitle:'过去事件、先后顺序、近期安排与预测',icon:'⏳',lessons:[
+      buildLesson('u12l1','常见不规则过去式','讲过去',
+        ['“我们上周末去了海边”怎么说？','We went to the beach last weekend.',['We go to the beach last weekend.','We goed to the beach last weekend.','We were go to the beach last weekend.'],'go 的过去式是 went；last weekend 常与过去时连用。'],
+        [['我昨天买了一件外套。','I bought a jacket yesterday.','I buyed a jacket yesterday.','I have buy a jacket yesterday.','I was buy a jacket yesterday.'],['她早上吃了早餐。','She had breakfast in the morning.','She has breakfast yesterday morning.','She haved breakfast this morning.','She did had breakfast morning.']],
+        ['I took the wrong train and arrived twenty minutes late.','我坐错了火车，晚到了二十分钟。',['我坐对了火车，提前二十分钟到。','我错过火车，在车站等了二十分钟。','我坐错公交，迟到了半小时。'],'听 take 的过去式 took，以及结果 arrived late。'],
+        {type:'speak',prompt:'讲一件上周做过的事。',phrase:'I went shopping with my wife last Saturday.','zh':'上周六我和妻子去购物了。'}),
+      buildLesson('u12l2','按顺序讲事情','first / then / after that',
+        ['“首先我买票，然后上车”怎么说？','First, I bought a ticket. Then I got on the bus.',['First I buy ticket, then get on bus.','At first I bought, after I got bus.','First I bought ticket, so I got in bus.'],'first 和 then 帮助听者理解事件顺序；注意过去式 bought/got。'],
+        [['之后我们在咖啡店见面。','After that, we met at the cafe.','After that, we meet at the cafe.','Then after that we was meet cafe.','After that we are met the cafe.'],['最后我回家休息。','Finally, I went home to rest.','At finally I go home rest.','Finally I went to home for rest.','The last I went home resting.']],
+        ['First, turn on the machine. Then add water. Finally, press this button.','首先打开机器，然后加水，最后按这个按钮。',['先加水，再打开机器，最后按按钮。','先按按钮，再加水，最后打开机器。','先打开机器，最后加水，然后按按钮。'],'听清 first、then、finally 的操作顺序。'],
+        {type:'write',prompt:'用 first、then、finally 写出早晨出门前的三个步骤。',modelAnswer:'First, I get dressed. Then I make breakfast. Finally, I leave home.'}),
+      buildLesson('u12l3','描述生活经历','现在完成时初步',
+        ['“我去过悉尼”怎么说？','I have been to Sydney.',['I have went to Sydney.','I was been to Sydney.','I have be in Sydney.'],'have been to 表示去过某地的经历。'],
+        [['她已经吃过午饭了。','She has already had lunch.','She have already ate lunch.','She has already eat lunch.','She did already had lunch.'],['你试过这道菜吗？','Have you tried this dish?','Did you tried this dish?','Have you try this dish?','Are you tried this dish?']],
+        ['Have you ever travelled by train? Yes, I have, but only once.','你坐火车旅行过吗？坐过，但只有一次。',['你坐火车上班吗？是的，每天都坐。','你昨天坐火车了吗？坐了两次。','你想坐火车旅行吗？是的，现在就想。'],'ever 常用于询问人生经历；once 是一次。'],
+        {type:'speak',prompt:'说一个你做过或没做过的生活体验。',phrase:'I have tried Mexican food, but I haven’t tried Thai food.','zh':'我吃过墨西哥菜，但没吃过泰国菜。'}),
+      buildLesson('u12l4','安排近期计划','be going to',
+        ['“我们周末打算拜访朋友”怎么说？','We’re going to visit our friends this weekend.',['We going visit friends this weekend.','We will going to visit friends.','We are go to visit our friends.'],'be going to + 动词原形表达已有计划。'],
+        [['我打算今晚做饭。','I’m going to cook dinner tonight.','I going to cook dinner tonight.','I’m going cook dinner tonight.','I’m going to cooking dinner tonight.'],['她打算报名英语课。','She’s going to sign up for an English class.','She going sign up an English class.','She’s going signing for English class.','She is go to sign up English class.']],
+        ['We’re going to leave at eight, so please be ready by seven forty-five.','我们打算八点出发，所以请在七点四十五前准备好。',['我们七点四十五到，八点前离开。','我们八点出发，请在八点十五准备好。','我们打算七点四十五离开，八点到。'],'by seven forty-five 表示不晚于七点四十五。'],
+        {type:'write',prompt:'写一条消息，邀请朋友参加你的周末计划。',modelAnswer:'Hi! We’re going to have a picnic on Saturday. Would you like to come?' }),
+      buildLesson('u12l5','做预测和临时决定','will',
+        ['“我来帮你拿这个袋子”作为临时决定，怎么说？','I’ll help you carry that bag.',['I helping you carry that bag.','I going help you carry that bag.','I’ll to help you carrying that bag.'],'I’ll 是 I will 的缩写；will 后用动词原形。'],
+        [['我想明天会很忙。','I think I’ll be busy tomorrow.','I think I be busy tomorrow.','I think I will busy tomorrow.','I am think I’ll busy tomorrow.'],['别担心，我会给你发消息。','Don’t worry. I’ll text you.','Don’t worry. I’ll texting you.','I text you will later.','I will to text you.']],
+        ['The weather may change this afternoon, so we’ll decide later.','今天下午天气可能变化，所以我们晚点再决定。',['天气肯定变好了，所以我们现在决定。','今天早上可能下雨，所以我们已经决定。','天气下午不会变，所以我们不用再决定。'],'may 表示可能；we’ll decide later 是晚点决定。'],
+        {type:'speak',prompt:'做一个简单预测，并说明你的想法。',phrase:'I think it will be sunny tomorrow, so we can go for a walk.','zh':'我觉得明天会晴，所以我们可以去散步。'})
+    ]
+  },
+  {
+    unit:'阶段 11 · 听力与阅读策略',subtitle:'抓主题、找细节、读通知和短消息',icon:'🔎',lessons:[
+      buildLesson('u13l1','先听主题大意','听力抓主旨',
+        ['听力练习第一遍最适合做什么？','先判断场景和主题',['试着听懂每一个单词','先翻译整段再听','只听最后一句'],'先抓场景、人物和目的，再听细节；不要被生词卡住。'],
+        [['听到 platform，通常是在什么场景？','车站或交通出行','餐厅点餐','看医生','购物退货'],['听到 reservation，最可能在做什么？','预订桌位或服务','问公交线路','描述症状','讨论天气']],
+        ['Good morning. The number six bus to the city centre is now boarding at stop three.','早上好，前往市中心的 6 路公交现在在 3 号站台开始上客。',['6 路公交已经离开市中心，正在去 3 号站台。','去机场的 3 路公交在 6 号站台上客。','6 路公交因故取消，请去市中心。'],'先确定交通公告，再抓线路、目的地和站台。'],
+        {type:'speak',prompt:'听完后用一句话复述关键信息。',phrase:'The number six bus leaves from stop three.','zh':'6 路公交从 3 号站台发车。'}),
+      buildLesson('u13l2','听准数字与时间','听力细节',
+        ['听时间时，quarter past nine 是几点？','9:15',['9:45','9:30','8:45'],'quarter past 表示过一刻钟；quarter to 表示差一刻。'],
+        [['half past six','6:30','6:15','6:45','5:30','half past six 是几点？'],['twenty to four','3:40','4:20','3:20','4:40','twenty to four 是几点？']],
+        ['The appointment is on the fifteenth of May at two twenty.','预约日期是 5 月 15 日，时间是两点二十分。',['预约在 5 月 5 日两点四十。','预约在 5 月 15 日四点二十分。','预约在 5 月 50 日两点二十分。'],'听清 fifteenth、May 和 two twenty。'],
+        {type:'write',prompt:'把听到的预约时间写成英文日期和时间。',modelAnswer:'The appointment is on May fifteenth at two twenty.'}),
+      buildLesson('u13l3','读通知找关键信息','阅读定位',
+        ['读一张活动海报，优先找哪几类信息？','日期、时间、地点和参加方式',['每个生词的词典定义','作者的个人经历','文章里最长的句子'],'任务型阅读先定位需要的信息，避免逐词翻译。'],
+        [['notice','通知','小说','菜单','收据','notice 是什么意思？'],['available','可用的；有空的','已经完成的','很贵的','很远的','available 是什么意思？']],
+        ['The swimming pool is closed on Monday for cleaning. It opens again at six on Tuesday morning.','游泳池周一因清洁关闭，周二早上六点重新开放。',['游泳池周二关闭，周一早上六点开放。','游泳池周一全天开放，周二清洁。','游泳池每周六早上六点开放。'],'找出 closed 的日期与 opens again 的日期。'],
+        {type:'speak',prompt:'用一句话概括通知的开放时间。',phrase:'The pool reopens at six on Tuesday morning.','zh':'游泳池周二早上六点重新开放。'}),
+      buildLesson('u13l4','读懂短信与邮件','阅读语气与目的',
+        ['短信 “Can we move our meeting to Friday?” 的目的是什么？','把会议改到星期五',['取消整个会议','确认会议室地址','询问会议时长'],'move a meeting to... 表示把会议改到某个时间。'],
+        [['Could you let me know?','你能告诉我吗？','我已经知道了。','请不要告诉我。','你能替我做吗？','“Could you let me know?”是什么意思？'],['I’m afraid I can’t make it.','恐怕我去不了。','我很期待参加。','我已经到了。','请帮我安排一下。','“I’m afraid I can’t make it.”是什么意思？']],
+        ['Hi Alex, I’m running late because my train is delayed. Please start without me. I’ll be there around 6:20.','嗨，Alex，我要迟到了，因为火车晚点。请先开始，不用等我。我大约 6:20 到。',['请 Alex 等他到 6:20 再开始；火车准时。','他取消了活动，火车大约 6:20 发车。','火车晚点，但他会提前到，请先等他。'],'识别原因、请求和预计到达时间。'],
+        {type:'write',prompt:'写一条两句短信：说明会迟到，并给出预计到达时间。',modelAnswer:'Sorry, I’m running late because the bus is delayed. I’ll be there around 6:20.'}),
+      buildLesson('u13l5','读短文抓主旨与细节','A2 短文',
+        ['阅读短文时怎样找到特定日期？','快速扫描数字、星期和月份',['只看第一行','从头逐词翻译','只找形容词'],'扫描式阅读可以先找数字、日期和专有名词。'],
+        [['main idea','主旨','详细例子','作者姓名','时间顺序','main idea 是什么意思？'],['for example','例如','最后','因为','相反','for example 是什么意思？']],
+        ['The local market opens every Sunday. You can buy fresh vegetables, bread and flowers there. It closes at one in the afternoon.','当地集市每周日开放，可以买到新鲜蔬菜、面包和鲜花，下午一点关门。',['集市每天下午一点开门，只卖面包。','集市每周日开放，下午一点关门。','集市每周一开放，卖蔬菜和衣服。'],'主旨是介绍集市；细节是星期日开放、下午一点关门。'],
+        {type:'write',prompt:'用两句英文总结这段集市信息。',modelAnswer:'The local market opens every Sunday. It sells fresh food and flowers and closes at one.'})
+    ]
+  },
+  {
+    unit:'阶段 12 · 雅思基础任务',subtitle:'口语短答、阅读定位、基础段落写作',icon:'📝',lessons:[
+      buildLesson('u14l1','回答个人日常问题','口语短答',
+        ['回答 “Where do you live?” 最完整的基础方式是？','I live in an apartment near the city centre.',['Apartment.','I am live near city centre.','I living in the centre.'],'口语短答可以先直接回答，再补一个简单细节。'],
+        [['我在一家小公司工作。','I work for a small company.','I working in small company.','I works for a small company.','I am work small company.'],['我通常晚上学英语。','I usually study English in the evening.','I usual study English on evening.','I am usually study English evening.','I studies English in evening.']],
+        ['What do you usually do after work? I usually cook dinner and watch a little TV.','你下班后通常做什么？我通常做晚饭，再看一会儿电视。',['你周末做什么？我通常工作和看电影。','你上班后做什么？我通常睡觉和做饭。','你通常几点下班？我七点做晚饭。'],'识别问题主题 after work 与回答中的两项活动。'],
+        {type:'speak',prompt:'用 2 至 3 句回答一个个人日常问题。',phrase:'I usually relax at home after work. I cook dinner and talk with my wife.','zh':'我下班后通常在家放松。我做晚饭，和妻子聊天。'}),
+      buildLesson('u14l2','把短答案扩成三句','口语展开',
+        ['简单回答后，最容易补充什么？','原因或一个具体例子',['换一个完全不同的话题','重复同一句话三遍','背一段很长的模板'],'回答 + 原因/例子，短而清楚，比背长模板更自然。'],
+        [['我喜欢散步，因为它让我放松。','I like walking because it helps me relax.','I like walking so it helps relaxing.','I am like walking because relax.','I enjoy walk because it relax me.'],['例如，我每周去公园两次。','For example, I go to the park twice a week.','For example I goes twice park week.','I go for example park in two week.','For example, I going to park twice.']],
+        ['Do you enjoy cooking? Yes, I do. It helps me relax, and I often try a new recipe at the weekend.','你喜欢做饭吗？喜欢。做饭让我放松，我经常在周末试一道新菜。',['不喜欢做饭；我只在周末买菜。','喜欢做饭，因为周末不做新菜。','喜欢做饭，我每天都去餐厅。'],'听回答、理由和例子三个部分。'],
+        {type:'speak',prompt:'按“回答 + 原因 + 例子”说三句。',phrase:'I enjoy walking because it keeps me active. For example, I walk by the river on Sundays.','zh':'我喜欢散步，因为这让我保持活力。例如，我周日会沿河散步。'}),
+      buildLesson('u14l3','写清楚简单句','写作句子基础',
+        ['完整的英文陈述句通常需要什么？','主语和动词',['两个形容词','介词和逗号','只写一个名词'],'基本句子至少要有主语和谓语动词。'],
+        [['我每天练习英语。','I practise English every day.','I every day English practise.','Practise English every day I.','I am practise English every day.'],['她在医院工作。','She works at a hospital.','She work in hospital.','At hospital she working.','She is work in a hospital.']],
+        ['My English class is on Tuesday and Thursday. It starts at six in the evening.','我的英语课在周二和周四，晚上六点开始。',['我的英语课每天六点结束，周二和周四开始。','我的英语课在周二和周四，晚上六点开始。','我的英语课只在周四上午六点开始。'],'听课程日期和开始时间。'],
+        {type:'write',prompt:'写一段三句自我介绍：住在哪里、做什么、为什么学英语。',modelAnswer:'I live in a small city. I work in an office. I am learning English because I want to travel.'}),
+      buildLesson('u14l4','写一段连贯小短文','段落结构',
+        ['一段短文中，哪个句子最适合放在开头？','概括这一段主题的句子',['一个无关细节','一个没有上下文的代词','最后一句结论'],'先给主题，再补两三个相关细节，段落更容易读懂。'],
+        [['first','首先','然而','虽然','最后','first 在说明步骤时是什么意思？'],['also','此外；也','因为','除非','直到','also 是什么意思？']],
+        ['I like my neighbourhood. It is quiet and there is a small park nearby. I often walk there after dinner.','我喜欢我住的社区。那里很安静，附近有一个小公园。我常在晚饭后去那里散步。',['我不喜欢社区，因为公园离家很远。','社区很安静，附近有公园，我常在那里散步。','我晚饭前去附近的餐馆工作。'],'句子按观点、地点特点、个人例子展开。'],
+        {type:'write',prompt:'写 4 句介绍你喜欢的地方：主题、特点、活动和理由。',modelAnswer:'I like the park near my home. It is quiet and clean. I walk there with my wife on weekends. It helps me relax.'}),
+      buildLesson('u14l5','综合阅读与短答','基础模考练习',
+        ['选择最清楚的个人经历表达。','Last year, I moved to a new neighbourhood and made two friends.',['Last year I move new area and make friends.','I was move last year and two friends.','I have move to area last year.'],'last year 是明确过去时间，应使用 moved 和 made。'],
+        [['我每周上两次课。','I have classes twice a week.','I have two class in week.','I am have classes twice week.','My class twice on a week.'],['我希望以后能更自信地说英语。','I hope I can speak English more confidently.','I hope I speaking English confident.','I can hope speak English more confident.','I hope to speaking English confidently more.']],
+        ['Sam works from Monday to Friday. He takes the train at 7:40 and arrives at the office at 8:15.','Sam 周一到周五上班。他 7:40 坐火车，8:15 到办公室。',['Sam 周末上班，8:15 坐火车，7:40 到办公室。','Sam 周一到周五上班，7:40 坐火车，8:15 到办公室。','Sam 每天开车上班，8:15 离开办公室。'],'分别定位工作日、出发时间和到达时间。'],
+        {type:'write',prompt:'用三句写一段自己的日常：频率、交通或时间、一个理由。',modelAnswer:'I work five days a week. I take the bus at eight. I like this routine because it is convenient.'})
+    ]
+  },
+  {
+    unit:'阶段 13 · 词根词缀与总复习',subtitle:'用构词规律拓词，再完成综合检查',icon:'🌿',lessons:[
+      buildLesson('u15l1','前缀 un- 与 re-','词汇扩展',
+        ['加上 re- 通常表示什么？','再一次',['相反','没有','人或职业'],'re- 常表示 again，如 rewrite（重写）、reopen（重新开放）。'],
+        [['unhappy','不开心的','再开心一次','很开心的','开心的人','“unhappy”是什么意思？'],['rewrite','重写','不再写','写作者','写错了','“rewrite”是什么意思？']],
+        ['The shop is closed now, but it will reopen tomorrow morning.','商店现在关门了，但明早会重新营业。',['商店现在营业，明早会关门。','商店明天早上重新装修。','商店今天关门，明天也不会开。'],'reopen 中 re- 表示重新；closed 是关门。'],
+        {type:'speak',prompt:'用 un- 或 re- 词汇造一个简单句。',phrase:'I had to rewrite the message because it was unclear.','zh':'我得重写这条消息，因为它不清楚。'}),
+      buildLesson('u15l2','后缀 -er / -ful / -less','词汇扩展',
+        ['careful 中 -ful 最接近什么意思？','充满……的；有……特质的',['没有……的','再一次','做……的人'],'-ful 常表示“充满某种特质”，careful 是小心的。'],
+        [['teacher','教师','教室','教学方法','教科书','“teacher”是什么意思？'],['useful','有用的','无用的','使用者','重新使用','“useful”是什么意思？']],
+        ['The information was useful, so I saved it for later.','这个信息很有用，所以我保存起来以后看。',['信息没用，所以我删掉了。','这个信息很难懂，我马上打印了。','信息很重要，所以我立即发出去了。'],'useful 是有用的；for later 是留到以后。'],
+        {type:'write',prompt:'选一个词根词缀词汇写句子：helpful、careless 或 teacher。',modelAnswer:'My teacher is helpful, and she explains new words clearly.'}),
+      buildLesson('u15l3','常见词族','词形变化',
+        ['use 的形容词 “有用的” 是什么？','useful',['user','used','usingly'],'useful 是形容词；useful information 表示有用的信息。'],
+        [['teach → 教师','teacher','teachingly','teached','teachful','“teach”对应的职业名词是？'],['help → 帮助；帮手','help / helper','helpfuler','helped person','helpness','选出 help 的动词和表示“帮手”的名词。']],
+        ['Learning a few related words together can help you remember them.','把几个相关词放在一起学，可以帮助你记住它们。',['把单词拆得越碎，就越难记住。','学习相关的词可以帮助记忆。','学习句子比学习词汇更困难。'],'related words 是相关词；remember 是记住。'],
+        {type:'speak',prompt:'用一个词族里的两个词各造一句短句。',phrase:'I use this app every day. It is useful for learning English.','zh':'我每天使用这个应用。它对学英语很有用。'}),
+      buildLesson('u15l4','词根 port 与 spect','中后期构词',
+        ['port 在 transport / import / export 中常与什么概念有关？','携带、运输',['看见','写字','发出声音'],'port 来自“携带”相关词根；transport 是运输，import/export 是进出口。'],
+        [['inspect','检查；查看','运送出去','写在里面','重新看见','“inspect”是什么意思？'],['transport','运输','翻译','交易价格','看穿','“transport”是什么意思？']],
+        ['Please inspect your luggage before you leave the airport.','离开机场前请检查你的行李。',['离开机场前请托运行李。','请在机场出口等待行李。','请在机场购买旅行用品。'],'inspect 表示检查；luggage 是行李。'],
+        {type:'write',prompt:'任选 transport、import、export 或 inspect 写一个句子。',modelAnswer:'Trains transport many people across the city.'}),
+      buildLesson('u15l5','综合阶段检查','把所学串起来',
+        ['综合表达时，哪个做法最有帮助？','先用熟悉的短句表达，再补细节',['尽量用很长但不确定的句子','为了流利跳过时态和主语','每句话都套同一个模板'],'清楚、完整、可理解的简单表达是继续提升的基础。'],
+        [['I went to work by bus yesterday.','昨天我坐公交去上班。','我每天坐公交去上班。','我明天打算坐公交上班。','我昨天在家坐公交。','“I went to work by bus yesterday.”是什么意思？'],['I’m going to study because I have an English test.','我打算学习，因为我有英语考试。','我昨天学习，因为考试结束了。','我每天学习，但没有英语考试。','我正在学习，所以我参加了考试。','“I’m going to study because I have an English test.”是什么意思？']],
+        ['I usually cook at home, but last Saturday I had dinner with friends. We are going to meet again next week.','我通常在家做饭，但上周六和朋友出去吃了。我们打算下周再见。',['我通常在外面吃饭，但上周六在家做饭。我们下周不会见面。','我通常在家做饭，上周六和朋友吃饭，打算下周再见。','我上周六和朋友做饭，通常下周出去吃饭。'],'听出习惯、过去事件和未来计划三种时间信息。'],
+        {type:'write',prompt:'用 4 至 5 句写一段综合介绍：日常习惯、一件过去的事、一个未来计划和一个理由。',modelAnswer:'I usually study English at night. Last weekend, I practised with my wife. We are going to visit friends next week. We want to use more English because we hope to travel.'})
+    ]
+  }
+);
+for(const [stageIndex,unit] of lessonCatalog.slice(newStageStart).entries()){
+  const bank=unit.lessons.flatMap(lesson=>lesson.questions.filter(question=>question.type==='choice'));
+  const questions=Array.from({length:5},(_,index)=>JSON.parse(JSON.stringify(bank[Math.floor(index*bank.length/5)])));
+  unit.lessons.push({id:`${unit.lessons[0].id.slice(0,-1)}r`,title:`阶段 ${stageIndex+6} 回顾`,label:'阶段复习',questions});
+}
+
 const defaultState = {
   activeUser: 'me',
   users: {
@@ -340,7 +596,7 @@ function renderQuestion(){
       btn.classList.add('selected');
       renderFooter();
     }));
-  } else {
+  } else if(q.type === 'speak') {
     $('lessonBody').innerHTML = `<div class="question-kicker">第 ${questionIndex+1} / ${currentLesson.questions.length} 题</div>
       <div class="question-title">${escapeHtml(q.prompt)}</div>
       <div class="speak-card">
@@ -357,13 +613,19 @@ function renderQuestion(){
       showToast('算你开口了，过关 👏');
       renderFooter();
     });
+  } else {
+    $('lessonBody').innerHTML = `<div class="question-kicker">第 ${questionIndex+1} / ${currentLesson.questions.length} 题 · 写作练习</div>
+      <div class="question-title">${escapeHtml(q.prompt)}</div>
+      <div class="question-hint">先自己写，再对照参考答案。这个练习不会自动判语法对错。</div>
+      <textarea class="writing-answer" id="writingAnswer" rows="5" maxlength="800" placeholder="用英文写几句……"></textarea>`;
+    $('writingAnswer').addEventListener('input', event=>{ selectedAnswer=event.target.value.trim(); $('checkBtn').disabled=!selectedAnswer; });
   }
   renderFooter();
 }
 
 function renderFooter(feedback=null){
   const q = currentLesson.questions[questionIndex];
-  const canSubmit = q.type==='choice' ? selectedAnswer!==null : selectedAnswer==='spoken';
+  const canSubmit = q.type==='choice' ? selectedAnswer!==null : q.type==='speak' ? selectedAnswer==='spoken' : Boolean(selectedAnswer);
   let html = '';
   if(feedback){
     html += `<div class="feedback ${feedback.good?'good':'bad'}">${escapeHtml(feedback.text)}</div>`;
@@ -371,7 +633,7 @@ function renderFooter(feedback=null){
   if(answered){
     html += `<button class="primary-btn" id="nextBtn">${questionIndex===currentLesson.questions.length-1?'查看结果':'继续'}</button>`;
   } else {
-    html += `<button class="primary-btn" id="checkBtn" ${canSubmit?'':'disabled'} style="${canSubmit?'':'opacity:.45;box-shadow:none'}">${q.type==='speak'?'完成跟读':'检查'}</button>`;
+    html += `<button class="primary-btn" id="checkBtn" ${canSubmit?'':'disabled'} style="${canSubmit?'':'opacity:.45;box-shadow:none'}">${q.type==='speak'?'完成跟读':q.type==='write'?'对照参考答案':'检查'}</button>`;
   }
   $('lessonFooter').innerHTML = html;
   if($('checkBtn')) $('checkBtn').addEventListener('click', checkAnswer);
@@ -383,6 +645,7 @@ function checkAnswer(){
   const q = currentLesson.questions[questionIndex];
   if(q.type==='choice' && selectedAnswer===null) return;
   if(q.type==='speak' && selectedAnswer!=='spoken') return;
+  if(q.type==='write' && !selectedAnswer) return;
   answered = true;
   let good = true;
   let text = '不错，继续。';
@@ -401,9 +664,12 @@ function checkAnswer(){
       save();
       $('lessonHearts').textContent = user().hearts;
     }
-  } else {
+  } else if(q.type==='speak') {
     correctCount++;
     text = '开口比憋在脑子里强得多。';
+  } else {
+    correctCount++;
+    text = `参考答案：${q.modelAnswer}。对照检查句子是否完整、动词时态是否合适。`;
   }
   renderFooter({good,text});
 }
@@ -565,7 +831,7 @@ function openReview(){
     const [lessonId, qIndex] = id.split(':');
     const lesson = lessonCatalog.flatMap(x=>x.lessons).find(l=>l.id===lessonId);
     const q = lesson?.questions[Number(qIndex)];
-    return q ? `<div class="option-btn"><div><b>${escapeHtml(q.prompt)}</b><div class="sheet-copy">${escapeHtml(q.explain||'重新看一遍即可')}</div></div></div>` : '';
+    return q ? `<div class="option-btn"><div><b>${escapeHtml(q.prompt)}</b><div class="sheet-copy">${escapeHtml(q.explain||q.modelAnswer||'重新看一遍即可')}</div></div></div>` : '';
   }).join('');
   openSheet(`<div class="sheet-title">错题回炉</div><div class="sheet-copy">只复习错过的，不给你塞一整本题库。</div><div class="option-list">${rows}</div><button class="primary-btn" id="clearMistakes">这些我记住了</button>`);
   $('clearMistakes').addEventListener('click',()=>{ u.mistakes=[]; save(); closeSheet(); render(); showToast('错题本清空'); });
