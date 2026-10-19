@@ -83,10 +83,6 @@
             <span class="tool-icon">🧠</span>
             <span><b>错题回炉</b><small id="reviewCount">暂无错题</small></span>
           </button>
-          <button class="tool-card" id="aiBtn">
-            <span class="tool-icon">🤖</span>
-            <span><b>AI 英语搭档</b><small>练口语、纠错、中文讲解</small></span>
-          </button>
           <button class="tool-card" id="syncBtn">
             <span class="tool-icon">🔗</span>
             <span><b>双人同步</b><small>同设备可直接用</small></span>
@@ -123,38 +119,8 @@
     <div class="lesson-footer" id="lessonFooter"></div>
   </section>
 
-  <section class="ai-screen hidden" id="aiScreen" aria-label="AI 英语搭档">
-    <header class="ai-header">
-      <button class="icon-btn plain" id="closeAI" aria-label="关闭 AI 陪练">✕</button>
-      <div><b>AI 英语搭档</b><small id="aiLearnerLabel"></small></div>
-      <button class="ghost-btn" id="newAIChat">新对话</button>
-    </header>
-    <details class="ai-settings" id="aiSetup">
-      <summary>连接兔子 API / 选择模型</summary>
-      <label for="aiGatewayUrl">后端地址</label>
-      <input id="aiGatewayUrl" type="url" inputmode="url" placeholder="https://你的-worker.workers.dev" autocomplete="url">
-      <label for="aiModel">模型 ID</label>
-      <div class="ai-model-row">
-        <input id="aiModel" list="aiModelOptions" placeholder="从兔子模型广场复制聊天模型 ID" autocomplete="off">
-        <datalist id="aiModelOptions"></datalist>
-        <button class="secondary-btn" id="loadAIModels" type="button">刷新</button>
-      </div>
-      <label for="aiAccessCode">网站访问码</label>
-      <input id="aiAccessCode" type="password" placeholder="部署 Worker 时设置的访问码" autocomplete="current-password">
-      <button class="primary-btn" id="saveAISettings" type="button">保存并连接</button>
-      <p>兔子 API 密钥只保存在后端。模型需支持 <code>/v1/chat/completions</code>；模型 ID 可随时切换。</p>
-    </details>
-    <div class="ai-messages" id="aiMessages" aria-live="polite"></div>
-    <form class="ai-composer" id="aiForm">
-      <button class="ai-mic-btn" id="aiMic" type="button" aria-label="语音输入">🎙️</button>
-      <textarea id="aiInput" rows="1" maxlength="1200" placeholder="用英语或中文说说你想练什么…"></textarea>
-      <button class="ai-send-btn" id="aiSend" type="submit">发送</button>
-    </form>
-  </section>
-
   <div class="toast hidden" id="toast"></div>
 
-  <script src="ai-config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

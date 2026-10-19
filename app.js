@@ -1,6 +1,4 @@
 const STORAGE_KEY = 'shuangqi_english_v1';
-const AI_SETTINGS_KEY = 'shuangqi_ai_settings_v1';
-const AI_HISTORY_KEY = 'shuangqi_ai_history_v1';
 
 const lessonCatalog = [
   {
@@ -503,129 +501,12 @@ function showToast(msg){
   toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2200);
 }
 
-// AI tutor: the browser stores only the worker URL and chosen model. API credentials
-// remain in the worker; the optional family access code is kept for this tab only.
-let aiSettings = (()=>{ try { return JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)) || {}; } catch { return {}; } })();
-let aiHistory = (()=>{ try { return JSON.parse(localStorage.getItem(AI_HISTORY_KEY)) || {}; } catch { return {}; } })();
-let aiBusy = false;
-let aiRecognition = null;
-function aiProfileKey(){ return state.activeUser; }
-function saveAIHistory(){ localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(aiHistory)); }
-function aiEndpoint(path){
-  const base = ($('aiGatewayUrl').value || aiSettings.gatewayUrl || window.SHUANGQI_AI_GATEWAY_URL || '').trim().replace(/\/+$/, '');
-  if(!base) throw new Error('先填写后端地址并保存连接。');
-  return `${base}/${path}`;
-}
-function openAI(){
-  $('aiLearnerLabel').textContent = ` · ${user().name}`;
-  $('aiGatewayUrl').value = aiSettings.gatewayUrl || window.SHUANGQI_AI_GATEWAY_URL || '';
-  $('aiModel').value = aiSettings.model || '';
-  $('aiAccessCode').value = sessionStorage.getItem('shuangqi_ai_access') || '';
-  $('aiScreen').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-  renderAIHistory();
-  $('aiInput').focus();
-}
-function closeAI(){ $('aiScreen').classList.add('hidden'); document.body.style.overflow = ''; }
-function renderAIHistory(){
-  const messages = aiHistory[aiProfileKey()] || [];
-  const box = $('aiMessages'); box.replaceChildren();
-  if(!messages.length){
-    const welcome = document.createElement('div'); welcome.className = 'ai-bubble assistant';
-    welcome.textContent = `嗨，${user().name}！我们可以用美式日常英语慢慢练。我会先用简单英语交流，再用中文解释和纠错。你想从今天过得怎么样开始吗？`;
-    box.append(welcome);
-  }
-  messages.forEach((message, index)=>appendAIMessage(message, index));
-  box.scrollTop = box.scrollHeight;
-}
-function appendAIMessage(message, index){
-  const row = document.createElement('div'); row.className = `ai-bubble ${message.role === 'assistant' ? 'assistant' : 'user'}`;
-  const text = document.createElement('div'); text.className = 'ai-message-text'; text.textContent = message.content || ''; row.append(text);
-  if(message.role === 'assistant'){
-    const actions = document.createElement('div'); actions.className = 'ai-bubble-actions';
-    const speak = document.createElement('button'); speak.type = 'button'; speak.className = 'ai-speak-btn'; speak.textContent = '🔊 播报';
-    speak.addEventListener('click', ()=>speakText((message.content || '').split(/\n|中文解释|讲解[:：]/)[0])); actions.append(speak); row.append(actions);
-  }
-  if(index === -1) row.dataset.pending = 'true';
-  $('aiMessages').append(row); return row;
-}
-function saveAIConnection(){
-  aiSettings = { gatewayUrl: $('aiGatewayUrl').value.trim().replace(/\/+$/, ''), model: $('aiModel').value.trim() };
-  localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(aiSettings));
-  sessionStorage.setItem('shuangqi_ai_access', $('aiAccessCode').value.trim());
-  showToast('连接设置已保存在此设备');
-}
-async function loadAIModels(){
-  try{
-    const response = await fetch(aiEndpoint('models'), { headers: { 'X-App-Password': $('aiAccessCode').value.trim() } });
-    const payload = await response.json();
-    if(!response.ok) throw new Error(payload.error || `加载失败 (${response.status})`);
-    const list = Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.models) ? payload.models : []);
-    $('aiModelOptions').replaceChildren(...list.map(item=>{ const option=document.createElement('option'); option.value=typeof item==='string'?item:item.id; return option; }));
-    if(!$('aiModel').value && list.length) $('aiModel').value = $('aiModelOptions').options[0].value;
-    showToast(`读到 ${list.length} 个模型；请选择支持聊天补全的模型`);
-  } catch(error){ showToast(error.message || '连接模型列表失败'); }
-}
-async function sendAIMessage(event){
-  event?.preventDefault();
-  if(aiBusy) return;
-  const content = $('aiInput').value.trim(); if(!content) return;
-  saveAIConnection();
-  if(!aiSettings.gatewayUrl || !aiSettings.model || !sessionStorage.getItem('shuangqi_ai_access')){ showToast('先填写后端地址、模型 ID 和访问码'); $('aiSetup').open = true; return; }
-  const key=aiProfileKey(), messages=aiHistory[key] || [];
-  messages.push({ role:'user', content }); aiHistory[key]=messages.slice(-20); saveAIHistory();
-  $('aiInput').value=''; renderAIHistory(); aiBusy=true; $('aiSend').disabled=true;
-  const pending=appendAIMessage({role:'assistant',content:'…'}, -1), output=pending.querySelector('.ai-message-text');
-  try{
-    const response=await fetch(aiEndpoint('chat'), { method:'POST', headers:{'Content-Type':'application/json','X-App-Password':sessionStorage.getItem('shuangqi_ai_access') || ''}, body:JSON.stringify({ model:aiSettings.model, messages:messages.slice(-12), learner:user().name }) });
-    if(!response.ok){ let detail=''; try{ detail=(await response.json()).error || ''; }catch{} throw new Error(detail || `请求失败 (${response.status})`); }
-    if(!response.body) throw new Error('浏览器不支持流式回复');
-    const reader=response.body.getReader(), decoder=new TextDecoder(); let buffer='', full='';
-    while(true){
-      const {value,done}=await reader.read(); if(done) break; buffer+=decoder.decode(value,{stream:true});
-      const blocks=buffer.split(/\r?\n\r?\n/); buffer=blocks.pop();
-      for(const block of blocks){
-        for(const line of block.split(/\r?\n/)) if(line.startsWith('data:')){
-          const raw=line.slice(5).trim(); if(!raw || raw==='[DONE]') continue;
-          let packet; try{packet=JSON.parse(raw);}catch{continue;}
-          const piece=packet.choices?.[0]?.delta?.content || packet.choices?.[0]?.message?.content || '';
-          if(typeof piece==='string') full+=piece;
-          else if(Array.isArray(piece)) full+=piece.map(part=>part.text || '').join('');
-          output.textContent=full || '…'; $('aiMessages').scrollTop=$('aiMessages').scrollHeight;
-          if(packet.error) throw new Error(packet.error.message || '模型回复失败');
-        }
-      }
-    }
-    if(!full) throw new Error('模型没有返回文字，请检查模型是否支持 /v1/chat/completions。');
-    messages.push({role:'assistant',content:full}); aiHistory[key]=messages.slice(-20); saveAIHistory();
-    pending.remove(); appendAIMessage({role:'assistant',content:full}, messages.length);
-  }catch(error){ pending.remove(); messages.pop(); aiHistory[key]=messages; saveAIHistory(); appendAIMessage({role:'assistant',content:`暂时没连上：${error.message}\n\n检查后端地址、访问码和模型 ID。`}, -2); }
-  finally{aiBusy=false;$('aiSend').disabled=false;$('aiMessages').scrollTop=$('aiMessages').scrollHeight;}
-}
-function startAIMic(){
-  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){ showToast('当前浏览器不支持语音输入，请试试 Chrome'); return; }
-  if(aiRecognition){ aiRecognition.stop(); aiRecognition=null; return; }
-  aiRecognition=new SpeechRecognition(); aiRecognition.lang='en-US'; aiRecognition.interimResults=true;
-  aiRecognition.onresult=event=>{ let transcript=''; for(let i=event.resultIndex;i<event.results.length;i++) transcript+=event.results[i][0].transcript; $('aiInput').value=transcript; };
-  aiRecognition.onerror=()=>showToast('没有听清，请再试一次'); aiRecognition.onend=()=>{aiRecognition=null;$('aiMic').classList.remove('listening');};
-  $('aiMic').classList.add('listening'); aiRecognition.start();
-}
-function clearAIChat(){ aiHistory[aiProfileKey()]=[]; saveAIHistory(); renderAIHistory(); }
-
 $('profileBtn').addEventListener('click', openProfileSheet);
 $('coupleBtn').addEventListener('click', openCoupleSheet);
 $('settingsBtn').addEventListener('click', openSettings);
 $('phraseBtn').addEventListener('click', openPhrase);
 $('reviewBtn').addEventListener('click', openReview);
 $('syncBtn').addEventListener('click', openSync);
-$('aiBtn').addEventListener('click', openAI);
-$('closeAI').addEventListener('click', closeAI);
-$('newAIChat').addEventListener('click', clearAIChat);
-$('aiForm').addEventListener('submit', sendAIMessage);
-$('saveAISettings').addEventListener('click', saveAIConnection);
-$('loadAIModels').addEventListener('click', loadAIModels);
-$('aiMic').addEventListener('click', startAIMic);
 $('closeLesson').addEventListener('click', ()=>{
   if(confirm('先退出这一节吗？当前这节不会计入完成。')) closeLesson();
 });
