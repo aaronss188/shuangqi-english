@@ -1,0 +1,7 @@
+name = "shuangqi-english-ai"
+main = "worker/index.js"
+compatibility_date = "2026-10-19"
+
+[vars]
+RABBIT_API_BASE = "https://api.tu-zi.com"
+ALLOWED_ORIGINS = "https://aaronss188.github.io,http://localhost:8080,http://127.0.0.1:8080"

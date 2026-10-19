@@ -15,6 +15,7 @@
 - 本地进度导入与导出
 - PWA，可添加到手机桌面
 - 离线缓存基础页面
+- AI 英语搭档：兔子 API 流式对话、模型选择、语音输入和朗读
 
 ## 最快打开方式
 
@@ -43,6 +44,25 @@ http://localhost:8080
 - 页面里提供了 JSON 进度导入与导出，可临时手动同步。
 
 如果希望两台手机实时同步，可以接 Supabase。仓库中已经放了 `supabase-schema.sql` 作为数据库骨架。
+
+## 启用 AI 英语搭档（兔子 API）
+
+GitHub Pages 是静态网站，不能安全地把兔子 API 密钥放进网页。因此项目包含一个独立的 Cloudflare Worker 代理：网页只请求 Worker，Worker 再访问兔子 API。Rabbit API 的模型 ID 可选择，但必须支持 `/v1/chat/completions`。
+
+1. 在兔子 API 账户创建 API Key，并在 Cloudflare 登录/创建账户。密钥不要发到聊天、不要放进网页设置或仓库。
+2. 在本目录安装 Wrangler 并登录 Cloudflare：`npm install -g wrangler`，然后 `wrangler login`。
+3. 在项目目录依次设置后端密钥：
+
+   ```bash
+   wrangler secret put RABBIT_API_KEY
+   wrangler secret put APP_PASSWORD
+   ```
+
+   第一个输入兔子 API Key；第二个设置至少 12 个字符的家庭访问码。输入过程不会回显，两个值都不会写进代码。
+4. 部署代理：`wrangler deploy`。命令返回一个 `https://...workers.dev` 地址。
+5. 在手机网站的“AI 英语搭档 → 连接兔子 API / 选择模型”里填入 Worker 地址、访问码和兔子模型广场里的模型 ID，然后点“刷新”或“保存并连接”。此处的模型需支持 Chat Completions；若模型广场标注不清楚，可直接填模型 ID 测试。
+
+聊天记录和网址/模型选择保存在当前浏览器本地；访问码仅保存在当前标签页会话中；兔子 API Key 只保存在 Cloudflare Worker Secret。兔子 API 用量按兔子账户计费，与 ChatGPT Plus 额度分开。语音输入使用浏览器 Web Speech API，浏览器/系统不支持时仍可打字和使用朗读。
 
 ## 下一版建议
 
